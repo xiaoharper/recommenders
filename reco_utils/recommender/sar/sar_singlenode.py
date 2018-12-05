@@ -188,6 +188,7 @@ class SARSingleNodeReference:
         else:
             return None
 
+    @profile
     def fit(self, df):
         """Main fit method for SAR"""
 
@@ -387,6 +388,7 @@ class SARSingleNodeReference:
 
         log.info("done training")
 
+    @profile
     def recommend_k_items(self, test, top_k=10, sort_top_k=False, **kwargs):
         """Recommend top K items for all users which are in the test set
 
