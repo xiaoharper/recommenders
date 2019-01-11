@@ -161,7 +161,7 @@ class RBM:
         #    return None
 
     # Binomial sampling
-    def B_sampling(self, pr):
+    def binomial_sampling(self, pr):
 
         """
         Binomial sampling of hidden units activations using a rejection method.
@@ -193,7 +193,7 @@ class RBM:
         return h_sampled
 
     # Multinomial sampling
-    def M_sampling(self, pr):
+    def multinomial_sampling(self, pr):
 
         """
         Multinomial Sampling of ratings
@@ -235,7 +235,7 @@ class RBM:
         return v_samp
 
     # Multinomial distribution
-    def Pm(self, phi):
+    def multinomial_probability(self, phi):
 
         """
         Probability that unit v has value l given phi: P(v=l|phi)
@@ -252,7 +252,7 @@ class RBM:
 
         num = [
             tf.exp(tf.multiply(tf.constant(k, dtype="float32"), phi))
-            for k in range(1, self.r_ + 1)
+            for k in range(1, self.rating_scale + 1)
         ]
         den = tf.reduce_sum(num, axis=0)
 
@@ -350,7 +350,7 @@ class RBM:
     """
 
     # sample the hidden units given the visibles
-    def sample_h(self, vv):
+    def sample_hidden(self, vv):
 
         """
         Sample hidden units given the visibles. This can be thought of as a Forward pass step in a FFN
@@ -368,17 +368,17 @@ class RBM:
 
             phi_v = tf.matmul(vv, self.w) + self.bh  # create a linear combination
             phv = tf.nn.sigmoid(phi_v)  # conditional probability of h given v
-            phv_reg = tf.nn.dropout(phv, self.keep)
+            phv_reg = tf.nn.dropout(phv, self.keep) #regularized probability
 
             # Sampling
-            h_ = self.B_sampling(
+            h_ = self.binomial_sampling(
                 phv_reg
             )  # obtain the value of the hidden units via Bernoulli sampling
 
         return phv, h_
 
     # sample the visible units given the hidden
-    def sample_v(self, h):
+    def sample_visible(self, h):
 
         """
         Sample the visible units given the hiddens. This can be thought of as a Backward pass in a FFN (negative phase)
@@ -405,10 +405,10 @@ class RBM:
         with tf.name_scope("sample_visible_units"):
 
             phi_h = tf.matmul(h, tf.transpose(self.w)) + self.bv  # linear combination
-            pvh = self.Pm(phi_h)  # conditional probability of v given h
+            pvh = self.multinomial_probability(phi_h)  # conditional probability of v given h
 
             # Sampling (modify here )
-            v_tmp = self.M_sampling(pvh)  # sample the value of the visible units
+            v_tmp = self.multinomial_sampling(pvh)  # sample the value of the visible units
 
             mask = tf.equal(self.v, 0)  # selects the inactive units in the input vector
             v_ = tf.where(
@@ -433,7 +433,7 @@ class RBM:
 
     # 1) Gibbs Sampling
 
-    def G_sampling(self):
+    def gibbs_sampling(self):
 
         """
         Gibbs sampling: Determines an estimate of the model configuration via sampling. In the binary RBM we need to
@@ -456,14 +456,14 @@ class RBM:
             )  # initialize the value of the visible units at step k=0 on the data
 
             if self.debug:
-                print("CD step", self.k)
+                print("cd step", self.k)
 
             for i in range(self.k):  # k_sampling
-                _, h_k = self.sample_h(self.v_k)
-                _, self.v_k = self.sample_v(h_k)
+                _, h_k = self.sample_hidden(self.v_k)
+                _, self.v_k = self.sample_visible(h_k)
 
-    # 2) Contrastive divergence
-    def Losses(self, vv):
+    # 2)  Loss function
+    def losses(self, vv):
 
         """
         Loss functions
@@ -484,18 +484,18 @@ class RBM:
 
         return obj
 
-    def Gibbs_protocol(self, i):
+    def gibbs_protocol(self, i):
         """
         Gibbs protocol
 
         Args:
             i (scalar, integer): current epoch in the loop
 
-        Returns: G_sampling --> v_k (tensor, float32) evaluated at k steps
+        Returns: gibbs_sampling --> v_k (tensor, float32) evaluated at k steps
 
         Basic mechanics:
-            If the current epoch i is in the interval specified in the training protocol cd_protocol_,
-            the number of steps in Gibbs sampling (k) is incremented by one and G_sampling is updated
+            If the current epoch -i- is in the interval specified in the training protocol cd_protocol_,
+            the number of steps in Gibbs sampling (k) is incremented by one and gibbs_sampling is updated
             accordingly.
 
         """
@@ -508,14 +508,11 @@ class RBM:
                 if per >= self.cd_protol[self.l] and per <= self.cd_protol[self.l + 1]:
                     self.k += 1
                     self.l += 1
-                    self.G_sampling()
+                    self.gibbs_sampling()
 
             if self.debug:
                 log.info("percentage of epochs covered so far %f2" % (per))
 
-    # ================================================
-    # model performance (online metrics)
-    # ================================================
 
     # Inference
     def infere(self):
@@ -535,10 +532,15 @@ class RBM:
 
         with tf.name_scope("inference"):
             # predict a new value
-            _, h_p = self.sample_h(self.v)
-            pvh, vp = self.sample_v(h_p)
+            _, h_p = self.sample_hidden(self.v)
+            pvh, vp = self.sample_visible(h_p)
 
         return pvh, vp
+
+
+    # ================================================
+    # model performance (online metrics)
+    # ================================================
 
     # Metrics
     def accuracy(self, vp):
@@ -578,6 +580,7 @@ class RBM:
 
         return ac_score
 
+
     def msr_error(self, vp):
 
         """
@@ -590,8 +593,6 @@ class RBM:
 
         Returns:
             err (tensor, float32): msr error
-
-        Returns:
 
         """
 
@@ -613,6 +614,100 @@ class RBM:
             )
 
         return err
+
+    #==============================
+    #Training ops modules
+    #==============================
+
+    def set_parameters(self, xtr):
+
+        '''
+        Method to fix the value of the hyperparameters
+
+        Args:
+            xtr (numpy array, float32): sparse matrix representation of the training set
+
+        Returns:
+
+
+        '''
+
+        # keep the position of the items in the train set so that they can be
+        # optionally exluded from recommendation
+        self.seen_mask = np.not_equal(xtr, 0)
+
+        self.rating_scale = xtr.max()  # defines the rating scale, e.g. 1 to 5
+
+        _, self.n = xtr.shape  # dimension of the input: m= N_users, Nv= N_items
+
+        self.num_minibatches = int(m / self.minibatch)  # number of minibatches
+
+        self.learning_rate = self.alpha / self.minibatch  # learning rate rescaled by the batch size
+
+
+    def generate_graph(self):
+
+        '''
+        Method collecting all the ops involved int the generation of the computational graph
+
+        '''
+
+        log.info("Creating the computational graph")
+
+        # create the visible units placeholder
+        self.placeholder()
+
+        # initialize Network paramters
+        self.init_parameters()
+
+
+    def data_pipeline():
+
+        self.batch_size_ = tf.placeholder(tf.int64)
+
+        # Create the data pipeline for faster training
+        self.dataset = tf.data.Dataset.from_tensor_slices(self.vu)
+
+        self.dataset = self.dataset.shuffle(
+            buffer_size=50, reshuffle_each_iteration=True, seed=123
+        )  # randomize the batch
+
+        self.dataset = self.dataset.batch(batch_size=self.batch_size_).repeat()
+
+        self.iter = self.dataset.make_initializable_iterator()
+        self.v = self.iter.get_next()
+
+    def training_ops():
+
+        obj = self.losses(self.v)  # objective function
+
+        # Instantiate the optimizer
+        self.optimizer = tf.contrib.optimizer_v2.AdamOptimizer(learning_rate= self.learning_rate).minimize(
+            loss=obj
+        )
+
+
+    def sampling_protocols():
+
+        # --------------Sampling protocol for Gibbs sampling-----------------------------------
+        self.k = 1  # initialize the gibbs_sampling step
+        self.l = 0  # initialize epoch_sample index
+        # -------------------------Main algo---------------------------
+
+        self.gibbs_sampling()  # returns the sampled value of the visible units
+
+
+    def init_metrics():
+
+        if self.with_metrics:  # if true (default) returns evaluation metrics
+
+            Mse_train = []  # Lists to collect the metrics across epochs
+
+            # Metrics
+            Mserr = self.msr_error(self.v_k)
+            Clacc = self.accuracy(self.v_k)
+
+
 
     # =========================
     # Training ops
@@ -639,71 +734,22 @@ class RBM:
 
         """
 
-        # keep the position of the items in the train set so that they can be optionally exluded from recommendation
-        self.seen_mask = np.not_equal(xtr, 0)
-
-        # start timing the methos
-        self.time()
-
-        self.r_ = xtr.max()  # defines the rating scale, e.g. 1 to 5
-        m, self.Nv_ = xtr.shape  # dimension of the input: m= N_users, Nv= N_items
-
-        num_minibatches = int(m / self.minibatch)  # number of minibatches
-
         tf.reset_default_graph()
-        # ----------------------Initialize all parameters----------------
-
-        log.info("Creating the computational graph")
-
-        # create the visible units placeholder
-        self.placeholder()
-
-        self.batch_size_ = tf.placeholder(tf.int64)
-
-        # Create the data pipeline for faster training
-        self.dataset = tf.data.Dataset.from_tensor_slices(self.vu)
-        self.dataset = self.dataset.shuffle(
-            buffer_size=50, reshuffle_each_iteration=True, seed=123
-        )  # randomize the batch
-        self.dataset = self.dataset.batch(batch_size=self.batch_size_).repeat()
-
-        self.iter = self.dataset.make_initializable_iterator()
-        self.v = self.iter.get_next()
-
-        # initialize Network paramters
-        self.init_parameters()
-
-        # --------------Sampling protocol for Gibbs sampling-----------------------------------
-        self.k = 1  # initialize the G_sampling step
-        self.l = 0  # initialize epoch_sample index
-        # -------------------------Main algo---------------------------
-
-        self.G_sampling()  # returns the sampled value of the visible units
-
-        obj = self.Losses(self.v)  # objective function
-        rate = self.alpha / self.minibatch  # learning rate rescaled by the batch size
-
-        # Instantiate the optimizer
-        opt = tf.contrib.optimizer_v2.AdamOptimizer(learning_rate=rate).minimize(
-            loss=obj
-        )
-
-        pvh, vp = (
-            self.infere()
-        )  # sample the value of the visible units given the hidden. Also returns  the related probabilities
-
-        if self.with_metrics:  # if true (default) returns evaluation metrics
-            Mse_train = []  # Lists to collect the metrics across epochs
-            # Metrics
-            Mserr = self.msr_error(self.v_k)
-            Clacc = self.accuracy(self.v_k)
 
         if self.save_path != None:  # save the model to file
             saver = tf.train.Saver()
 
-        init_g = (
-            tf.global_variables_initializer()
-        )  # Initialize all variables in the graph
+        # start timing
+        self.time()
+
+        self.set_parameters(xtr)  #fix the hyperparameters
+        self.generate_graph() #generate the computational graph
+        self.data_pipeline() #initiate data pipiline
+        self.training_ops() #Training ops
+        self.sampling_protocols() #sampling protocols
+        self.init_metrics() #optionally initialize the metrics
+
+        init_g = tf.global_variables_initializer() # Initialize all variables in the graph
 
         # Config GPU memory
         Config = tf.ConfigProto(log_device_placement=True, allow_soft_placement=True)
@@ -718,32 +764,26 @@ class RBM:
             feed_dict={self.vu: xtr, self.batch_size_: self.minibatch},
         )
 
-        if (
-            self.with_metrics
-        ):  # this condition is for benchmarking, remove for production
+        # start loop over training epochs
+        for i in range(self.epochs):
 
-            # start loop over training epochs
-            for i in range(self.epochs):
+            epoch_tr_err = 0  # initialize the training error for each epoch to zero
 
-                epoch_tr_err = 0  # initialize the training error for each epoch to zero
+            self.gibbs_protocol(i)  # updates the number of sampling steps in Gibbs sampling
 
-                self.Gibbs_protocol(
-                    i
-                )  # updates the number of sampling steps in Gibbs sampling
+            for l in range(self.num_minibatches):
 
-                for l in range(num_minibatches):
+                _, batch_err = self.sess.run([self.opt, Mserr])
 
-                    _, batch_err = self.sess.run([opt, Mserr])
-
-                    epoch_tr_err += (
-                        batch_err / num_minibatches
-                    )  # average msr error per minibatch
+                epoch_tr_err += (batch_err / num_minibatches)  # average msr error per minibatch
 
                 if i % self.display == 0:
                     log.info("training epoch %i rmse Train %f" % (i, epoch_tr_err))
 
                 # write metrics across epochs
                 Mse_train.append(epoch_tr_err)  # mse training error per training epoch
+
+            log.info("done training, Training time %f2" % elapsed)
 
             # Evaluates precision on the train and test set
             precision_train = self.sess.run(Clacc)
@@ -757,7 +797,7 @@ class RBM:
 
             elapsed = self.time()
 
-            log.info("done training, Training time %f2" % elapsed)
+
 
             # Display training error as a function of epochs
             plt.plot(Mse_train, label="train")
@@ -774,7 +814,7 @@ class RBM:
             # start loop over training epochs
             for i in range(self.epochs):
 
-                self.Gibbs_protocol(
+                self.gibbs_protocol(
                     i
                 )  # updates the number of sampling steps in Gibbs sampling
 
@@ -909,6 +949,7 @@ class RBM:
         top_scores = score - score_c  # set to zeros all elements other then the top_k
 
         return top_scores, elapsed
+
 
     def predict(self, x, maps):
 
