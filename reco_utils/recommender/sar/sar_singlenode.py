@@ -247,6 +247,82 @@ class SARSingleNode:
 
         logger.info("Done training")
 
+def update(self, df):
+        """updates scores for new df; leverages pre-existing item-similarity data.
+
+        Args:
+            df (pd.DataFrame): User item rating dataframe
+        """
+
+        # Item components already completed.
+        if not self.item_similarity:
+            raise ValueError("Item similarity must already be computed.")
+
+        # Create the mapping from user to index
+        self.user2index = {x[1]: x[0] for x in enumerate(df[self.col_user].unique())}
+
+        self.n_users = len(self.user2index)
+        self.n_items = len(self.index2item)
+
+        logger.info("Collecting user affinity matrix")
+        if not np.issubdtype(df[self.col_rating].dtype, np.floating):
+            raise TypeError("Rating column data type must be floating point")
+
+        # Copy the DataFrame to avoid modification of the input
+        temp_df = df[[self.col_user, self.col_item, self.col_rating]].copy()
+
+        if self.time_decay_flag:
+            logger.info("Calculating time-decayed affinities")
+            # if time_now is None use the latest time
+            # This should be set at this point...
+            if not self.time_now:
+                self.time_now = df[self.col_timestamp].max()
+
+            # apply time decay to each rating
+            temp_df[self.col_rating] *= exponential_decay(
+                value=df[self.col_timestamp],
+                max_val=self.time_now,
+                half_life=self.time_decay_half_life,
+            )
+
+            # group time decayed ratings by user-item and take the sum as the user-item affinity
+            temp_df = (
+                temp_df.groupby([self.col_user, self.col_item]).sum().reset_index()
+            )
+        else:
+            # without time decay use the latest user-item rating in the dataset as the affinity score
+            logger.info("De-duplicating the user-item counts")
+            temp_df = temp_df.drop_duplicates(
+                [self.col_user, self.col_item], keep="last"
+            )
+
+        logger.info("Creating index columns")
+        # Map users and items according to the two dicts. Add the two new columns to temp_df.
+        temp_df.loc[:, self.col_item_id] = temp_df[self.col_item].map(self.item2index)
+        temp_df.loc[:, self.col_user_id] = temp_df[self.col_user].map(self.user2index)
+
+        seen_items = None
+        if self.remove_seen:
+            # retain seen items for removal at prediction time
+            seen_items = temp_df[[self.col_user_id, self.col_item_id]].values
+
+        # Affinity matrix
+        logger.info("Building user affinity sparse matrix")
+        self.user_affinity = self.compute_affinity_matrix(
+            temp_df, self.n_users, self.n_items
+        )
+
+        # Calculate raw scores with a matrix multiplication
+        logger.info("Calculating recommendation scores")
+        self.scores = self.user_affinity.dot(self.item_similarity)
+
+        # Remove items in the train set so recommended items are always novel
+        if self.remove_seen:
+            logger.info("Removing seen items")
+            self.scores[seen_items[:, 0], seen_items[:, 1]] = -np.inf
+
+        logger.info("Done training")
+
     def recommend_k_items(self, test, top_k=10, sort_top_k=False):
         """Recommend top K items for all users which are in the test set
 
