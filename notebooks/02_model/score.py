@@ -14,7 +14,7 @@ sys.path.append("../../")
 import logging
 logging.basicConfig(level=logging.DEBUG, 
                     format='%(asctime)s %(levelname)-8s %(message)s')
-                    
+
 from reco_utils.recommender.sar.sar_singlenode import SARSingleNode
 
 print("System version: {}".format(sys.version))
@@ -60,6 +60,8 @@ model.update(df2)
 ## create top_k
 top_k = model.recommend_k_items(df2)
 
+## make sure to make this if necessary
+os.makedirs(outputs_dir)
 top_k_filename = os.path.join(outputs_dir,'top_k_%s_%s_to_%s.csv' %(MOVIELENS_DATA_SIZE, MIN_UID, MAX_UID))
 print('Writing out top k to %s' %(top_k_filename))
 top_k.to_csv(top_k_filename)
