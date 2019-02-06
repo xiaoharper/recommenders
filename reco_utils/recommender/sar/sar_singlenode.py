@@ -265,7 +265,6 @@ class SARSingleNode:
         self.user2index = {x[1]: x[0] for x in enumerate(df[self.col_user].unique())}
         self.n_users = len(self.user2index)
 
-        logger.info("Collecting user affinity matrix")
         if not np.issubdtype(df[self.col_rating].dtype, np.floating):
             raise TypeError("Rating column data type must be floating point")
 
@@ -318,7 +317,7 @@ class SARSingleNode:
         """
 
         # Item components already completed.
-        if not self.item_similarity:
+        if not self.item_similarity.any():
             raise ValueError("Item similarity must already be computed.")
 
         # Create the mapping from user to index
