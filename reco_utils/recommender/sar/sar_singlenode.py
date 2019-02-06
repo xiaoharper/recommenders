@@ -277,6 +277,11 @@ class SARSingleNode:
         # Copy the DataFrame to avoid modification of the input
         temp_df = df[[self.col_user, self.col_item, self.col_rating]].copy()
 
+        # Map users and items according to the two dicts. Add the two new columns to temp_df.
+        # col_user_id also needed for coocurrence
+        temp_df.loc[:, self.col_item_id] = temp_df[self.col_item].map(self.item2index)
+        temp_df.loc[:, self.col_user_id] = temp_df[self.col_user].map(self.user2index)
+
         # Calculate item co-occurrence
         logger.info("Calculating item co-occurrence")
         item_cooccurrence = self.compute_coocurrence_matrix(
