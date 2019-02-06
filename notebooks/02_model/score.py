@@ -10,7 +10,6 @@ import sys
 sys.path.append("../../")
 ## must copy reco_utils here!
 
-# import itertools
 import logging
 logging.basicConfig(level=logging.DEBUG, 
                     format='%(asctime)s %(levelname)-8s %(message)s')
@@ -39,7 +38,7 @@ if len(sys.argv) > 6:
     TOP_K = int(sys.argv[6])
 
 if len(sys.argv) > 7:
-    MOVIELENS_DATA_SIZE = int(sys.argv[7])
+    MOVIELENS_DATA_SIZE = sys.argv[7]
 
 
 ## read in the model.
