@@ -5,13 +5,16 @@ import pickle
 import dask.dataframe as dd
 
 ## for reco_utils
+import os
 import sys
 sys.path.append("../../")
 ## must copy reco_utils here!
 
 # import itertools
 import logging
-
+logging.basicConfig(level=logging.DEBUG, 
+                    format='%(asctime)s %(levelname)-8s %(message)s')
+                    
 from reco_utils.recommender.sar.sar_singlenode import SARSingleNode
 
 print("System version: {}".format(sys.version))
@@ -52,6 +55,7 @@ print('Reading %s as ratings file...' %(ratings_parquet_name))
 df2 = df[(df.UserId >= MIN_UID) & (df.UserId < MAX_UID)].compute()
 
 ## create scores
+print('Creating scores.')
 model.update(df2)
 ## create top_k
 top_k = model.recommend_k_items(df2)
