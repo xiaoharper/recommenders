@@ -48,7 +48,7 @@ with open(model_file, "rb") as input_file:
     model = pickle.load(input_file)
 
 ## read in the relevant user ratings data
-ratings_parquet_name = os.path.join(inputs_dir,'ratings_%s.parquet' %(MOVIELENS_DATA_SIZE))
+ratings_parquet_name = os.path.join(inputs_dir,'ratings_%s.parquet.zip' %(MOVIELENS_DATA_SIZE))
 df = dd.read_parquet(ratings_parquet_name)
 print('Reading %s as ratings file...' %(ratings_parquet_name))
 
