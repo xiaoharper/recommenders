@@ -247,7 +247,7 @@ class SARSingleNode:
 
         logger.info("Done training")
 
-def fit0(self, df):
+    def fit0(self, df):
         """Create item-similarity and update relevant fields on entire dataset
 
         Args:
@@ -305,7 +305,7 @@ def fit0(self, df):
             )
         logger.info("Done with fit0")
 
-def update(self, df):
+    def update(self, df):
         """updates scores for new df; leverages pre-existing item-similarity data.
 
         Args:
