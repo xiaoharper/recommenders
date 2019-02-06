@@ -47,11 +47,16 @@ print('Reading %s as model file...' %(model_file))
 with open(model_file, "rb") as input_file:
     model = pickle.load(input_file)
 
-## read in teh relevant user ratings data
+## read in the relevant user ratings data
 ratings_parquet_name = os.path.join(inputs_dir,'ratings_%s.parquet' %(MOVIELENS_DATA_SIZE))
 df = dd.read_parquet(ratings_parquet_name)
 print('Reading %s as ratings file...' %(ratings_parquet_name))
-df2 = df[(df.UserId >= MIN_UID) & (df.UserId < MAX_UID)].compute()
+
+## Allow for running whole dataset easily for testing
+if MIN_UID < 0 or MAX_UID < 0:
+    df2 = df.compute()
+else:
+    df2 = df[(df.UserId >= MIN_UID) & (df.UserId < MAX_UID)].compute()
 
 ## create scores
 print('Creating scores.')
