@@ -247,6 +247,64 @@ class SARSingleNode:
 
         logger.info("Done training")
 
+def fit0(self, df):
+        """Create item-similarity and update relevant fields on entire dataset
+
+        Args:
+            df (pd.DataFrame): User item rating dataframe
+        """
+
+        # Map a continuous index to user / item ids
+        self.index2item = dict(enumerate(df[self.col_item].unique()))
+
+        # Invert the mapping from above
+        self.item2index = {v: k for k, v in self.index2item.items()}
+        self.n_items = len(self.index2item)
+
+        # Need users for item_cooccurence
+        self.user2index = {x[1]: x[0] for x in enumerate(df[self.col_user].unique())}
+        self.n_users = len(self.user2index)
+
+        logger.info("Collecting user affinity matrix")
+        if not np.issubdtype(df[self.col_rating].dtype, np.floating):
+            raise TypeError("Rating column data type must be floating point")
+
+        if self.time_decay_flag:
+            # if time_now is None use the latest time
+            if not self.time_now:
+                self.time_now = df[self.col_timestamp].max()
+
+        # Copy the DataFrame to avoid modification of the input
+        temp_df = df[[self.col_user, self.col_item, self.col_rating]].copy()
+
+        # Calculate item co-occurrence
+        logger.info("Calculating item co-occurrence")
+        item_cooccurrence = self.compute_coocurrence_matrix(
+            temp_df, self.n_users, self.n_items
+        )
+
+        # Free up some space
+        del temp_df
+
+        logger.info("Calculating item similarity")
+        if self.similarity_type == sar.SIM_COOCCUR:
+            self.item_similarity = item_cooccurrence
+        elif self.similarity_type == sar.SIM_JACCARD:
+            logger.info("Calculating jaccard")
+            self.item_similarity = jaccard(item_cooccurrence)
+            # Free up some space
+            del item_cooccurrence
+        elif self.similarity_type == sar.SIM_LIFT:
+            logger.info("Calculating lift")
+            self.item_similarity = lift(item_cooccurrence)
+            # Free up some space
+            del item_cooccurrence
+        else:
+            raise ValueError(
+                "Unknown similarity type: {0}".format(self.similarity_type)
+            )
+        logger.info("Done with fit0")
+
 def update(self, df):
         """updates scores for new df; leverages pre-existing item-similarity data.
 
@@ -321,7 +379,7 @@ def update(self, df):
             logger.info("Removing seen items")
             self.scores[seen_items[:, 0], seen_items[:, 1]] = -np.inf
 
-        logger.info("Done training")
+        logger.info("Done with update")
 
     def recommend_k_items(self, test, top_k=10, sort_top_k=False):
         """Recommend top K items for all users which are in the test set
