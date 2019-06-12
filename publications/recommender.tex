@@ -24,7 +24,7 @@
 
 % Short headings should be running head and authors last names
 
-\ShortHeadings{Learning with Mixtures of Trees}{Meila and Jordan}
+\ShortHeadings{Microsoft Recommenders}{Meila and Jordan}
 \firstpageno{1}
 
 \begin{document}
@@ -61,6 +61,8 @@ The open source GitHub repository, \verb|Microsoft Recommenders| was created for
 In this paper the \verb|Microsoft Recommenders| repository is introduced with its design principles, technologies under the hood, and technical advantage over the existing approaches.
 
 \section{Microsoft Recommenders}
+The following sub-sections brief the design thinking of \verb|Microsoft Recommenders|.
+
 \subsection{Principles}
 \begin{enumerate}
 \item \emph{The repository covers a wide spectrum of recommender algorithms. It includes classic methods such as collaborative filtering and factorization machine, as well as more recent deep learning algorithms with enhanced model accuracy, explainability, and scalability.} The wide breadth of recommendation algorithms, as well as the DevOps pipeline that serves as a backbone underneath the codebase, offers convenience to the researchers and developers for trying different algorithms and selecting the optimal one for particular use case. 
@@ -77,18 +79,22 @@ The major deliverables in the repository are \verb|notebooks| and \verb|reco_uti
 \end{itemize}
 
 \subsection{Technologies}
+\verb|Microsoft Recommenders| supports various platforms for building recommender systems with the cutting-edge recommendation algorithms.
+
 \subsubsection{Recommender algorithm and auxiliary operations}
-\verb|Microsoft Recommenders| supports various platforms for building recommender systems with the cutting-edge recommendation algorithms. The table below summarizes the recommender algorithms collected in the \verb|Microsoft Recommenders| thus far. The table also shows the technologies used in the implementation and use case scenario of these algorithms.
+ The table below summarizes the recommender algorithms collected in the \verb|Microsoft Recommenders| thus far \citep{ke2017lightgbm,wang2018dkn,lian2018xdeepfm,howard2018fastai,he2017neural,salakhutdinov2007restricted,cheng2016wide,diev2015sar,koren2009matrix} The table also shows the technologies used in the implementation and use case scenario of these algorithms.
 
 \begin{adjustbox}{angle=90}
   \footnotesize
   \begin{threeparttable}
-    \begin{tabular}{|p{5cm}|p{3cm}|p{3cm}|p{5cm}|}
+  \caption{List of the collected recommender algorithms and their supported technology platforms}
+    \begin{tabular}{|p{8cm}|p{3.5cm}|p{3.5cm}|p{6cm}|}
+    \hline
     \textbf{Algorithms} & \textbf{Environment} & \textbf{Type} & \textbf{Description} \\
     \hline
     Alternating Least Square & Spark cluster & Collaborative filtering & Matrix factorization algorithm \\
     \hline
-    LightGBM/Gradient Boosting Tree\cite{ke2017lightgbm} & CPU / Spark cluster & Content-based filtering & Gradient Boosting Tree algorithm for fast training and low memory usage in content-based problems \\
+    LightGBM/Gradient Boosting Tree & CPU / Spark cluster & Content-based filtering & Gradient Boosting Tree algorithm for fast training and low memory usage in content-based problems \\
     \hline
     Deep knowledge-aware network\textsuperscript{*} & CPU / GPU & Content-based filtering & Deep learning algorithm with knowledge graph enhancement \\
     \hline
@@ -182,7 +188,6 @@ by $H$. We aim to show that $\fracpartial{I_{uv}}{P_{v0}} < 0$....\\
 {\noindent \em Remainder omitted in this sample. See http://www.jmlr.org/papers/ for full paper.}
 
 \vskip 0.2in
-% \nocite{*}
-\bibliography{sample}
+\bibliography{references}
 
 \end{document}
