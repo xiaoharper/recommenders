@@ -27,7 +27,7 @@
 
 \begin{document}
 
-\title{Microsoft Recommenders: Best practices for building industry-grade recommender system}
+\title{Microsoft Recommenders: best practices for building industry-grade recommender system}
 
 \author{\name Andreas Argyriou \email anargyri@microsoft.com \\
   \name Miguel Gonzalez-Fierro \email migonza@microsoft.com \\
@@ -56,7 +56,7 @@
 \section{Introduction}
 The open source GitHub repository, \verb|Microsoft Recommenders|, was created for sharing the best practices in building industry standard recommender system for varieties of application scenarios. The repository aims at helping developers, scientists and researchers to quickly build production-ready recommendation systems as well as to prototype novel ideas using the provided utility functions.
 
-In this paper we introduce Microsoft Recommenders by describing the general principles, models and topics covered by the repository which includes implementation of modern state-of-the-art recommendation algorithms as well as more practical topics such as hyper-parameter tuning and operationalisation. Microsoft Recommenders 
+In this paper we introduce Microsoft Recommenders by describing the general principles, models and topics covered by the repository which includes implementation of modern state-of-the-art recommendation algorithms as well as more practical topics such as hyper-parameter tuning and operationalisation. 
 
 \section{Microsoft Recommenders}
 \subsection{Principles}
@@ -66,22 +66,31 @@ In this paper we introduce Microsoft Recommenders by describing the general prin
 \item \emph{The Recommenders repository avails heterogeneous computing platforms and data storage media on cloud that meet the requirements of the different workloads in a recommender system pipeline.} A commonly seen problem that arises in recommender system design is that the backend data processing pipeline and model building/serving pipeline should be designed and implemented under certain set of engineering constraints to satisfy the requirements of the frontend applications. To harness the complexity in system design, the Recommenders repository provides reference architectures that demonstrates how to build an enterprise level end-to-end recommendation system. For example, the reference architecture for a real-time recommender system shows data ingestion, data storage, model building, model deployment and model consumption by using various technologies like Spark, distributed database and Kubernetes on the cloud. 
 \end{enumerate}
 
+\subsection{Design of the repository}
+The major deliverables in the repository are \verb|notebooks| and \verb|reco_utils|.
+
+\begin{itemize}
+ \item \verb|notebooks|
+ \item \verb|reco_utils| are reusable assets for common tasks in building recommender system. Such tasks include data preparation, evaluation, etc. To favor such operations with scalability consideration, some of the \verb|reco_utils| are implemented in both Python and PySpark versions.
+\end{itemize}
+
 \subsection{Technologies}
 \subsubsection{Recommender algorithm}
 \begin{table}[]
 \begin{tabular}{lllll}
  & Algorithms  & Environment & Type & Description \\
- & Alternate Leasting Square & Spark & Collaborative filtering & Matrix factorization algorithm \\
+ & Alternating Least Square & Spark & Collaborative filtering & Matrix factorization algorithm \\
  & Deep knowledge-aware network & Python CPU / Python GPU & Content-based filtering & Deep learning algorithm with knowledge graph enhancement  \\
 \end{tabular}
 \end{table}
 
 \subsubsection{Model development and optimization}
-\subsubsection{System production}
+The \verb|Microsoft Recommender| repository offers reusable assets for the whole life cycle of developing a recommender system, which include data preparation, model development, model evaluation, and model evaluation. For example, the data preparation utilities make the  
 
-\subsection{Design of the package}
-\verb|notebooks|
-\verb|reco_utils| are reusable assets for common tasks in building recommender system. Such tasks include data preparation, evaluation, etc. To favor such operations with scalability consideration, some of the \verb|reco_utils| are implemented in both Python and PySpark versions.
+Hyperparameter tuning plays a vital part in model selection. Intelligent methods for tuning hyper parameters for recommender models, especially those built with deep learning algorithms, are highly desirable. The repository provides the best practices for optimizing model performance with the state-of-the-arts tuning methods like Bayesian optimization, Hyperband, etc.
+
+\subsubsection{System production}
+To avail building industry-grade deployable recommender system, the repository demonstrated reference architecture of building scalable recommender system \footnote{The reference architecture is demonstrated on Microsoft Azure cloud platform.}
 
 \section{Comparison}
 
@@ -139,6 +148,7 @@ by $H$. We aim to show that $\fracpartial{I_{uv}}{P_{v0}} < 0$....\\
 {\noindent \em Remainder omitted in this sample. See http://www.jmlr.org/papers/ for full paper.}
 
 \vskip 0.2in
+\nocite{*}
 \bibliography{sample}
 
 \end{document}
