@@ -10,6 +10,8 @@
 
 \usepackage{jmlr2e}
 \usepackage[utf8]{inputenc}
+\usepackage{adjustbox}
+\usepackage[flushleft]{threeparttable}
 
 % Definitions of handy macros can go here
 
@@ -54,9 +56,9 @@
 \end{keywords}
 
 \section{Introduction}
-The open source GitHub repository, \verb|Microsoft Recommenders|, was created for sharing the best practices in building industry standard recommender system for varieties of application scenarios. The repository aims at helping developers, scientists and researchers to quickly build production-ready recommendation systems as well as to prototype novel ideas using the provided utility functions.
+The open source GitHub repository, \verb|Microsoft Recommenders| was created for sharing the best practices in building industry standard recommender system for varieties of application scenarios. The repository aims at helping developers, scientists and researchers to quickly build production-ready recommendation systems as well as to prototype novel ideas using the provided utility functions.
 
-In this paper we introduce Microsoft Recommenders by describing the general principles, models and topics covered by the repository which includes implementation of modern state-of-the-art recommendation algorithms as well as more practical topics such as hyper-parameter tuning and operationalisation. 
+In this paper the \verb|Microsoft Recommenders| repository is introduced with its design principles, technologies under the hood, and technical advantage over the existing approaches.
 
 \section{Microsoft Recommenders}
 \subsection{Principles}
@@ -67,7 +69,7 @@ In this paper we introduce Microsoft Recommenders by describing the general prin
 \end{enumerate}
 
 \subsection{Design of the repository}
-The major deliverables in the repository are \verb|notebooks| and \verb|reco_utils|.
+The major deliverables in the repository are \verb|notebooks| and \verb|reco_utils|. Both of implemented in \verb|Python| programming language, which is the most popular programming tool to the contemporary data science and machine learning problems.
 
 \begin{itemize}
  \item \verb|notebooks|
@@ -75,14 +77,46 @@ The major deliverables in the repository are \verb|notebooks| and \verb|reco_uti
 \end{itemize}
 
 \subsection{Technologies}
-\subsubsection{Recommender algorithm}
-\begin{table}[]
-\begin{tabular}{lllll}
- & Algorithms  & Environment & Type & Description \\
- & Alternating Least Square & Spark & Collaborative filtering & Matrix factorization algorithm \\
- & Deep knowledge-aware network & Python CPU / Python GPU & Content-based filtering & Deep learning algorithm with knowledge graph enhancement  \\
-\end{tabular}
-\end{table}
+\subsubsection{Recommender algorithm and auxiliary operations}
+\verb|Microsoft Recommenders| supports various platforms for building recommender systems with the cutting-edge recommendation algorithms. The table below summarizes the recommender algorithms collected in the \verb|Microsoft Recommenders| thus far. The table also shows the technologies used in the implementation and use case scenario of these algorithms.
+
+\begin{adjustbox}{angle=90}
+  \footnotesize
+  \begin{threeparttable}
+    \begin{tabular}{|p{5cm}|p{3cm}|p{3cm}|p{5cm}|}
+    \textbf{Algorithms} & \textbf{Environment} & \textbf{Type} & \textbf{Description} \\
+    \hline
+    Alternating Least Square & Spark cluster & Collaborative filtering & Matrix factorization algorithm \\
+    \hline
+    LightGBM/Gradient Boosting Tree\cite{ke2017lightgbm} & CPU / Spark cluster & Content-based filtering & Gradient Boosting Tree algorithm for fast training and low memory usage in content-based problems \\
+    \hline
+    Deep knowledge-aware network\textsuperscript{*} & CPU / GPU & Content-based filtering & Deep learning algorithm with knowledge graph enhancement \\
+    \hline
+    Extreme Deep Factorization Machine (xDeepFM)\textsuperscript{*} & CPU / GPU & Hybrid & Deep learning based algorithm for implicit and explicit feedback with user/item features \\
+    \hline
+    FastAI Embedding Dot Bias (FAST) & CPU / GPU & Collaborative filtering & General purpose algorithm with embeddings and biases for users and items \\
+    \hline
+    Neural Collaborative filtering (NCF)\textsuperscript{*} & CPU / GPU & Collaborative filtering & Deep learning algorithm with enhanced performance for implicit feedback \\
+    \hline
+    Restricted Boltzmann Machines (RBM)\textsuperscript{*} & CPU / GPU & Collaborative filtering & Neural network based algorithm for learning the underlying probability distribution for explicit or implicit feedback \\
+    \hline
+    Wide and Deep & CPU / GPU & Hybrid & Deep learning algorithm that can memorize feature interactions and generalize user features \\
+    \hline
+    Riemannian Low-rank Matrix Completion (RLRMC)\textsuperscript{*} & CPU & Collaborative filtering & Matrix factorization algorithm using Riemannian conjugate gradients optimization with small memory consumption. \\
+    \hline
+    Simple Algorithm for Recommendation (SAR)\textsuperscript{*} & CPU & Collaborative filtering & Similarity-based algorithm for implicit feedback dataset \\
+    \hline
+    Surprise/Singular Value Decomposition (SVD) & CPU & Collaborative filtering & Matrix factorization algorithm for predicting explicit rating feedback in datasets that are not very large \\
+    \hline
+    Vowpal Wabbit Family (VW) & CPU (online training) & Content-based filtering & Fast online learning algorithms, great for scenarios where user features / context are constantly changing \\
+    \hline
+    \end{tabular}
+    \begin{tablenotes}
+      \scriptsize
+      \item Recommender algorithms labelled with "*" indicate that they are implemented natively in the repository.
+    \end{tablenotes}
+  \end{threeparttable}
+\end{adjustbox}
 
 \subsubsection{Model development and optimization}
 The \verb|Microsoft Recommender| repository offers reusable assets for the whole life cycle of developing a recommender system, which include data preparation, model development, model evaluation, and model evaluation. For example, the data preparation utilities make the  
@@ -148,7 +182,7 @@ by $H$. We aim to show that $\fracpartial{I_{uv}}{P_{v0}} < 0$....\\
 {\noindent \em Remainder omitted in this sample. See http://www.jmlr.org/papers/ for full paper.}
 
 \vskip 0.2in
-\nocite{*}
+% \nocite{*}
 \bibliography{sample}
 
 \end{document}
