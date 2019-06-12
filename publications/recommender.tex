@@ -26,7 +26,7 @@
 
 % Heading arguments are {volume}{year}{pages}{date submitted}{date published}{paper id}{author-full-names}
 
-\jmlrheading{1}{2000}{1-48}{4/00}{10/00}{meila00a}{Marina Meil\u{a} and Michael I. Jordan}
+\jmlrheading{1}{2019}{1-48}{4/00}{10/00}{msrecorepo}{Microsoft Recommender core development team}
 
 % Short headings should be running head and authors last names
 
@@ -54,7 +54,7 @@
 \maketitle
 
 \begin{abstract}%   <- trailing '%' for backward compatibility of .sty file
-  This paper talks about the design philosophy and implementation methodology of Microsoft Recommenders, which is aimed at providing researchers and developers with best-practices for building  industry-grade recommendation system at scale.
+  This paper talks about the design and implementation of \verb|Microsoft Recommenders|, which is aimed at providing researchers and developers with best-practices for building  industry-grade recommendation system at scale. Codes and documentation can be found at \url{https://github.com./microsoft/recommenders}. 
 \end{abstract}
 
 \begin{keywords}
@@ -62,7 +62,7 @@
 \end{keywords}
 
 \section{Introduction}
-\verb|Microsoft Recommenders| is an open-source repository created for sharing the best practices in building industry standard recommender system for varieties of application scenarios. The repository aims at helping developers, scientists and researchers to quickly build production-ready recommendation systems as well as to prototype novel ideas using the provided utility functions.
+\verb|Microsoft Recommenders| is an open-source repository created for sharing the best practices in building industry standard recommender system for varieties of application scenarios. The repository aims at helping developers, scientists and researchers to quickly build production-ready recommendation systems as well as to prototype novel ideas using the provided utility functions. The repository is released under MIT license.
 
 In this paper the \verb|Microsoft Recommenders| repository is introduced with its design principles, technologies under the hood, and technical advantage over the existing approaches.
 
@@ -70,6 +70,7 @@ In this paper the \verb|Microsoft Recommenders| repository is introduced with it
 The following sub-sections brief the design thinking of \verb|Microsoft Recommenders|.
 
 \subsection{Principles}
+The \verb|Microsoft Recommenders| repository is designed with the following principles.
 \begin{enumerate}
 \item \emph{The repository covers a wide spectrum of recommender algorithms, including classic methods such as collaborative filtering and factorization machine, as well as more recent deep learning algorithms with enhanced model accuracy, explainability, and scalability.} The wide breadth of recommendation algorithms, as well as the DevOps pipeline that serves as a backbone underneath the codebase, offers convenience to the researchers and developers for trying different algorithms and selecting the optimal one for particular use case. 
 \item \emph{The algorithms are implemented and optimized for easy adoption and customization.} It is a common yet challenging task to generalize implementations of various components in a recommender system for development efficiency. The repository provides modular and reusable assets with consistent formats, coding style, and standard APIs, to enable ready-for-use scenarios as well as user-customized solutions in a recommender system. In addition, the theoretical discussion and code implementation are put into Jupyter notebooks to provide interactive experience for the developers and have them quickly understand, implement or customize different recommendation algorithms. When necessary, the notebooks can be conveniently converted to production-ready codes with minimal efforts on refactoring. 
@@ -81,11 +82,12 @@ The major deliverables in the repository are \verb|notebooks| and \verb|reco_uti
 
 \begin{itemize}
  \item \verb|notebooks| are Jupyter notebooks where particular topics like recommender algorithms, data preparation methods, evaluation metrics, etc. are detailed with both text and codes. The advantage of using Jupyter notebook is that it make it convenient to users to interactively walk through the code samples, and to convert to Python scripts if needed.
- \item \verb|reco_utils| are reusable assets for common tasks in building recommender system. Such tasks include data preparation, evaluation, etc. To favor such operations with scalability consideration, some of the \verb|reco_utils| are implemented in both Python and PySpark versions.
+ \item \verb|reco_utils| are reusable assets for common tasks in building recommender system. Such tasks include data preparation, evaluation, etc. To favor such operations with scalability consideration, some of the \verb|reco_utils| are implemented in both Python and PySpark versions. The API design of the \verb|reco_utils| follows the software engineering principles like "evidence-based design", "single responsibility", etc., to guarantee consistency, simplicity, and modularity.
 \end{itemize}
+The codebase of both \verb|notebooks| and \verb|reco_utils| are built with unit, integration, and smoke tests to assure their appropriate functionality.
 
 \subsection{Technologies}
-\verb|Microsoft Recommenders| supports various platforms for building recommender systems with the cutting-edge recommendation algorithms. Users of the repository can conveniently choose the desired algorithms for implementing on their supported platforms like single-node CPU computer, Spark cluster, or single-node or multi-node computer(s) with GPU device incorporated.
+\verb|Microsoft Recommenders| supports various platforms for building recommender systems with the cutting-edge recommendation algorithms. Users of the repository can conveniently choose the desired algorithms for implementing on their supported platforms like single-node CPU computer, Spark cluster, or single-node or multi-node computer(s) with GPU device incorporated. These backend platforms are supported with corresponding programming framworks like PySpark, Tensorflow, etc. \citep{abadi2016tensorflow}
 
  The table below summarizes the recommender algorithms collected in the repository thus far \citep{ke2017lightgbm,wang2018dkn,lian2018xdeepfm,howard2018fastai,he2017neural,salakhutdinov2007restricted,cheng2016wide,diev2015sar,koren2009matrix} The table also shows the technologies used in the implementation and use case scenario of these algorithms. 
 
@@ -135,8 +137,7 @@ There are a few machine learning and architecture engineering technologies featu
 Compared to the existing packages in the open source community, \verb|Microsoft Recommenders|, ...  
 
 \section{Conclusion}
-
-{\noindent \em Remainder omitted in this sample. See http://www.jmlr.org/papers/ for full paper.}
+In this paper, we present \verb|Microsoft Recommenders| repository, which provides a wide collection of the classic and advanced recommender algorithms, as well as useful code modules for building enterprise-grade recommender system. The best practices shared in the repository help researchers and developers to build a whole end-to-end recommender system at scale.
 
 % Acknowledgements should go at the end, before appendices and references
 
@@ -146,43 +147,6 @@ Compared to the existing packages in the open source community, \verb|Microsoft 
 % needed in general before appendices/bibliography.
 
 \newpage
-
-\appendix
-\section*{Appendix A.}
-\label{app:theorem}
-
-% Note: in this sample, the section number is hard-coded in. Following
-% proper LaTeX conventions, it should properly be coded as a reference:
-
-%In this appendix we prove the following theorem from
-%Section~\ref{sec:textree-generalization}:
-
-In this appendix we prove the following theorem from
-Section~6.2:
-
-\noindent
-{\bf Theorem} {\it Let $u,v,w$ be discrete variables such that $v, w$ do
-not co-occur with $u$ (i.e., $u\neq0\;\Rightarrow \;v=w=0$ in a given
-dataset $\dataset$). Let $N_{v0},N_{w0}$ be the number of data points for
-which $v=0, w=0$ respectively, and let $I_{uv},I_{uw}$ be the
-respective empirical mutual information values based on the sample
-$\dataset$. Then
-\[
-	N_{v0} \;>\; N_{w0}\;\;\Rightarrow\;\;I_{uv} \;\leq\;I_{uw}
-\]
-with equality only if $u$ is identically 0.} \hfill\BlackBox
-
-\noindent
-{\bf Proof}. We use the notation:
-\[
-P_v(i) \;=\;\frac{N_v^i}{N},\;\;\;i \neq 0;\;\;\;
-P_{v0}\;\equiv\;P_v(0)\; = \;1 - \sum_{i\neq 0}P_v(i).
-\]
-These values represent the (empirical) probabilities of $v$
-taking value $i\neq 0$ and 0 respectively.  Entropies will be denoted
-by $H$. We aim to show that $\fracpartial{I_{uv}}{P_{v0}} < 0$....\\
-
-{\noindent \em Remainder omitted in this sample. See http://www.jmlr.org/papers/ for full paper.}
 
 \vskip 0.2in
 \bibliography{references}
