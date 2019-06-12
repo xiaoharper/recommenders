@@ -76,6 +76,7 @@ PIP_BASE = {
     "fastai": "fastai==1.0.46",
     "hyperopt": "hyperopt==0.1.1",
     "idna": "idna==2.7",
+    "locustio": "locustio==0.11.0",
     "memory-profiler": "memory-profiler>=0.54.0",
     "nvidia-ml-py3": "nvidia-ml-py3>=7.352.0",
     "papermill": "papermill==0.18.2",
@@ -158,10 +159,12 @@ if __name__ == "__main__":
     # check for os platform support
     if platform == 'darwin':
         pip_packages.update(PIP_DARWIN)
-    if platform == 'linux':
+    elif platform.startswith('linux'):
         pip_packages.update(PIP_LINUX)
-    if platform == 'win32':
+    elif platform == 'win32':
         pip_packages.update(PIP_WIN32)
+    else:
+        raise Exception('Unsupported platform, must be Windows, Linux, or macOS')
 
     # write out yaml file
     conda_file = "{}.yaml".format(conda_env)
