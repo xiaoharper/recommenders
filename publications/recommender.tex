@@ -12,6 +12,12 @@
 \usepackage[utf8]{inputenc}
 \usepackage{adjustbox}
 \usepackage[flushleft]{threeparttable}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+}
 
 % Definitions of handy macros can go here
 
@@ -56,7 +62,7 @@
 \end{keywords}
 
 \section{Introduction}
-The open source GitHub repository, \verb|Microsoft Recommenders| was created for sharing the best practices in building industry standard recommender system for varieties of application scenarios. The repository aims at helping developers, scientists and researchers to quickly build production-ready recommendation systems as well as to prototype novel ideas using the provided utility functions.
+\verb|Microsoft Recommenders| is an open-source repository created for sharing the best practices in building industry standard recommender system for varieties of application scenarios. The repository aims at helping developers, scientists and researchers to quickly build production-ready recommendation systems as well as to prototype novel ideas using the provided utility functions.
 
 In this paper the \verb|Microsoft Recommenders| repository is introduced with its design principles, technologies under the hood, and technical advantage over the existing approaches.
 
@@ -65,30 +71,29 @@ The following sub-sections brief the design thinking of \verb|Microsoft Recommen
 
 \subsection{Principles}
 \begin{enumerate}
-\item \emph{The repository covers a wide spectrum of recommender algorithms. It includes classic methods such as collaborative filtering and factorization machine, as well as more recent deep learning algorithms with enhanced model accuracy, explainability, and scalability.} The wide breadth of recommendation algorithms, as well as the DevOps pipeline that serves as a backbone underneath the codebase, offers convenience to the researchers and developers for trying different algorithms and selecting the optimal one for particular use case. 
-\item \emph{The algorithms are implemented and optimized for easy adoption and customization.} It is a common yet challenging task to generalize implementations of various components in a recommender system for development efficiency. The repository provides modular and reusable assets as utility functions (e.g. temporal or stratified split between training and testing data) with consistent formats, coding style, and standard APIs, to enable ready-for-use scenarios as well as user-customized solutions in a recommender system. In addition, the theoretical discussion and code implementation are put into Jupyter notebooks to provide interactive experience for the developers and have them quickly understand, implement or customize different recommendation algorithms. When necessary, the notebooks can be conveniently converted to production-ready codes with minimal efforts on refactoring. 
-\item \emph{The Recommenders repository avails heterogeneous computing platforms and data storage media on cloud that meet the requirements of the different workloads in a recommender system pipeline.} A commonly seen problem that arises in recommender system design is that the backend data processing pipeline and model building/serving pipeline should be designed and implemented under certain set of engineering constraints to satisfy the requirements of the frontend applications. To harness the complexity in system design, the Recommenders repository provides reference architectures that demonstrates how to build an enterprise level end-to-end recommendation system. For example, the reference architecture for a real-time recommender system shows data ingestion, data storage, model building, model deployment and model consumption by using various technologies like Spark, distributed database and Kubernetes on the cloud. 
+\item \emph{The repository covers a wide spectrum of recommender algorithms, including classic methods such as collaborative filtering and factorization machine, as well as more recent deep learning algorithms with enhanced model accuracy, explainability, and scalability.} The wide breadth of recommendation algorithms, as well as the DevOps pipeline that serves as a backbone underneath the codebase, offers convenience to the researchers and developers for trying different algorithms and selecting the optimal one for particular use case. 
+\item \emph{The algorithms are implemented and optimized for easy adoption and customization.} It is a common yet challenging task to generalize implementations of various components in a recommender system for development efficiency. The repository provides modular and reusable assets with consistent formats, coding style, and standard APIs, to enable ready-for-use scenarios as well as user-customized solutions in a recommender system. In addition, the theoretical discussion and code implementation are put into Jupyter notebooks to provide interactive experience for the developers and have them quickly understand, implement or customize different recommendation algorithms. When necessary, the notebooks can be conveniently converted to production-ready codes with minimal efforts on refactoring. 
+\item \emph{The Recommenders repository supports heterogeneous computing platforms and data storage media that meet the requirements of the different workloads in a recommender system pipeline.} To harness the engineering problems in recommender system development, the repository provides reference architectures that demonstrates how to build an enterprise level end-to-end recommendation system.  
 \end{enumerate}
 
-\subsection{Design of the repository}
-The major deliverables in the repository are \verb|notebooks| and \verb|reco_utils|. Both of implemented in \verb|Python| programming language, which is the most popular programming tool to the contemporary data science and machine learning problems.
+\subsection{Code design}
+The major deliverables in the repository are \verb|notebooks| and \verb|reco_utils|. Both are implemented in \verb|Python| which is the most popular programming tool to the contemporary data science and machine learning problems.
 
 \begin{itemize}
- \item \verb|notebooks|
+ \item \verb|notebooks| are Jupyter notebooks where particular topics like recommender algorithms, data preparation methods, evaluation metrics, etc. are detailed with both text and codes. The advantage of using Jupyter notebook is that it make it convenient to users to interactively walk through the code samples, and to convert to Python scripts if needed.
  \item \verb|reco_utils| are reusable assets for common tasks in building recommender system. Such tasks include data preparation, evaluation, etc. To favor such operations with scalability consideration, some of the \verb|reco_utils| are implemented in both Python and PySpark versions.
 \end{itemize}
 
 \subsection{Technologies}
-\verb|Microsoft Recommenders| supports various platforms for building recommender systems with the cutting-edge recommendation algorithms.
+\verb|Microsoft Recommenders| supports various platforms for building recommender systems with the cutting-edge recommendation algorithms. Users of the repository can conveniently choose the desired algorithms for implementing on their supported platforms like single-node CPU computer, Spark cluster, or single-node or multi-node computer(s) with GPU device incorporated.
 
-\subsubsection{Recommender algorithm and auxiliary operations}
- The table below summarizes the recommender algorithms collected in the \verb|Microsoft Recommenders| thus far \citep{ke2017lightgbm,wang2018dkn,lian2018xdeepfm,howard2018fastai,he2017neural,salakhutdinov2007restricted,cheng2016wide,diev2015sar,koren2009matrix} The table also shows the technologies used in the implementation and use case scenario of these algorithms.
+ The table below summarizes the recommender algorithms collected in the repository thus far \citep{ke2017lightgbm,wang2018dkn,lian2018xdeepfm,howard2018fastai,he2017neural,salakhutdinov2007restricted,cheng2016wide,diev2015sar,koren2009matrix} The table also shows the technologies used in the implementation and use case scenario of these algorithms. 
 
 \begin{adjustbox}{angle=90}
   \footnotesize
   \begin{threeparttable}
   \caption{List of the collected recommender algorithms and their supported technology platforms}
-    \begin{tabular}{|p{8cm}|p{3.5cm}|p{3.5cm}|p{6cm}|}
+    \begin{tabular}{|p{5cm}|p{2cm}|p{4cm}|p{6cm}|}
     \hline
     \textbf{Algorithms} & \textbf{Environment} & \textbf{Type} & \textbf{Description} \\
     \hline
@@ -124,15 +129,10 @@ The major deliverables in the repository are \verb|notebooks| and \verb|reco_uti
   \end{threeparttable}
 \end{adjustbox}
 
-\subsubsection{Model development and optimization}
-The \verb|Microsoft Recommender| repository offers reusable assets for the whole life cycle of developing a recommender system, which include data preparation, model development, model evaluation, and model evaluation. For example, the data preparation utilities make the  
-
-Hyperparameter tuning plays a vital part in model selection. Intelligent methods for tuning hyper parameters for recommender models, especially those built with deep learning algorithms, are highly desirable. The repository provides the best practices for optimizing model performance with the state-of-the-arts tuning methods like Bayesian optimization, Hyperband, etc.
-
-\subsubsection{System production}
-To avail building industry-grade deployable recommender system, the repository demonstrated reference architecture of building scalable recommender system \footnote{The reference architecture is demonstrated on Microsoft Azure cloud platform.}
+There are a few machine learning and architecture engineering technologies featured in the repository. For instance, hyperparameter tuning plays a vital part in model selection. Intelligent methods for tuning hyper parameters for recommender models, especially those built with deep learning algorithms, are highly desirable. The repository provides the best practices for optimizing model performance with the state-of-the-arts tuning methods like Bayesian optimization, Hyperband, etc. \citep{pelikan1999boa,li2016hyperband} To avail building industry-grade deployable recommender system, the repository demonstrated reference architecture of building scalable recommender system \footnote{The reference architecture is demonstrated on Microsoft Azure cloud platform.}, by using distributed database, scalable container cluster on Kubernetes, etc.
 
 \section{Comparison}
+Compared to the existing packages in the open source community, \verb|Microsoft Recommenders|, ...  
 
 \section{Conclusion}
 
@@ -140,10 +140,7 @@ To avail building industry-grade deployable recommender system, the repository d
 
 % Acknowledgements should go at the end, before appendices and references
 
-\acks{We would like to acknowledge support for this project
-from the National Science Foundation (NSF grant IIS-9988642)
-and the Multidisciplinary Research Program of the Department
-of Defense (MURI N00014-00-1-0637). }
+\acks{We would like to acknowledge all the contributors to the repository. The complete name list of the contributors can be found \href{https://github.com/microsoft/recommenders/blob/master/AUTHORS.md}{here}}
 
 % Manual newpage inserted to improve layout of sample file - not
 % needed in general before appendices/bibliography.
