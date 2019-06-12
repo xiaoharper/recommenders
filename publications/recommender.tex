@@ -26,11 +26,11 @@
 
 % Heading arguments are {volume}{year}{pages}{date submitted}{date published}{paper id}{author-full-names}
 
-\jmlrheading{1}{2019}{1-48}{4/00}{10/00}{msrecorepo}{Microsoft Recommender core development team}
+\jmlrheading{1}{2019}{1-48}{4/00}{10/00}{msrecorepo}{Microsoft Recommender core team}
 
 % Short headings should be running head and authors last names
 
-\ShortHeadings{Microsoft Recommenders}{Meila and Jordan}
+\ShortHeadings{Microsoft Recommenders}{Microsoft Recommenders core team}
 \firstpageno{1}
 
 \begin{document}
@@ -62,9 +62,7 @@
 \end{keywords}
 
 \section{Introduction}
-\verb|Microsoft Recommenders| is an open-source repository created for sharing the best practices in building industry standard recommender system for varieties of application scenarios. The repository aims at helping developers, scientists and researchers to quickly build production-ready recommendation systems as well as to prototype novel ideas using the provided utility functions. The repository is released under MIT license.
-
-In this paper the \verb|Microsoft Recommenders| repository is introduced with its design principles, technologies under the hood, and technical advantage over the existing approaches.
+\verb|Microsoft Recommenders| is an open-source repository created for sharing the best practices in building industry standard recommender system for varieties of application scenarios. The repository aims at helping developers, scientists and researchers to quickly build production-ready recommendation systems as well as to prototype novel ideas using the provided utility functions. The repository is released under MIT license. In this paper the \verb|Microsoft Recommenders| repository is introduced with its design principles, technologies under the hood, and technical advantage over the existing approaches.
 
 \section{Microsoft Recommenders}
 The following sub-sections brief the design thinking of \verb|Microsoft Recommenders|.
@@ -73,7 +71,7 @@ The following sub-sections brief the design thinking of \verb|Microsoft Recommen
 The \verb|Microsoft Recommenders| repository is designed with the following principles.
 \begin{enumerate}
 \item \emph{The repository covers a wide spectrum of recommender algorithms, including classic methods such as collaborative filtering and factorization machine, as well as more recent deep learning algorithms with enhanced model accuracy, explainability, and scalability.} The wide breadth of recommendation algorithms, as well as the DevOps pipeline that serves as a backbone underneath the codebase, offers convenience to the researchers and developers for trying different algorithms and selecting the optimal one for particular use case. 
-\item \emph{The algorithms are implemented and optimized for easy adoption and customization.} It is a common yet challenging task to generalize implementations of various components in a recommender system for development efficiency. The repository provides modular and reusable assets with consistent formats, coding style, and standard APIs, to enable ready-for-use scenarios as well as user-customized solutions in a recommender system. In addition, the theoretical discussion and code implementation are put into Jupyter notebooks to provide interactive experience for the developers and have them quickly understand, implement or customize different recommendation algorithms. When necessary, the notebooks can be conveniently converted to production-ready codes with minimal efforts on refactoring. 
+\item \emph{The algorithms are implemented and optimized for easy adoption and customization.} It is a common yet challenging task to generalize implementations of various components in a recommender system for development efficiency. The repository provides modular and reusable assets with consistent formats, coding style, and standard APIs, to enable ready-for-use scenarios as well as user-customized solutions in a recommender system. In addition, the theoretical discussion and code implementation are put into Jupyter notebooks to provide interactive experience for the developers and have them quickly understand, implement or customize different recommendation algorithms. 
 \item \emph{The Recommenders repository supports heterogeneous computing platforms and data storage media that meet the requirements of the different workloads in a recommender system pipeline.} To harness the engineering problems in recommender system development, the repository provides reference architectures that demonstrates how to build an enterprise level end-to-end recommendation system.  
 \end{enumerate}
 
@@ -95,7 +93,7 @@ The codebase of both \verb|notebooks| and \verb|reco_utils| are built with unit,
   \footnotesize
   \begin{threeparttable}
   \caption{List of the collected recommender algorithms and their supported technology platforms}
-    \begin{tabular}{|p{5cm}|p{2cm}|p{4cm}|p{6cm}|}
+    \begin{tabular}{|p{5cm}|p{2cm}|p{2cm}|p{6cm}|}
     \hline
     \textbf{Algorithms} & \textbf{Environment} & \textbf{Type} & \textbf{Description} \\
     \hline
