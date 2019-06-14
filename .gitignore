@@ -128,6 +128,7 @@ Untitled*.ipynb
 output.ipynb
 conda*.yaml
 reco_*.yaml
+!reco_utils/kubernetes/manifest/
 .idea/
 *.npz
 *.data
