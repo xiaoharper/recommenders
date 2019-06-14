@@ -15,7 +15,8 @@ They have admin access to the repo and provide support reviewing issues and pull
    * Reference architecture
 * **[Jun Ki Min](https://github.com/loomlike)**
    * ALS notebook
-   * Wide & Deep algorithm
+   * Wide & Deep notebook
+   * Hyperparameter tuning notebooks: AzureML and Kubeflow 
 * **[Le Zhang](https://github.com/yueguoguo)**
    * Reco utils
    * Continuous integration build / test setup
