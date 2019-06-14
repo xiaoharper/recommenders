@@ -5,10 +5,13 @@ ENV PYTHONPATH /app
 COPY ./reco_utils /app/reco_utils/
 COPY ./scripts/generate_conda_file.py /app/generate_conda_file.py
 
+RUN apt-get update && \
+    apt-get -y install gcc && \
+    rm -rf /var/lib/apt/lists/*
+
 ARG arg
 RUN python /app/generate_conda_file.py $arg --name environment
-#RUN conda env create -f environment.yaml --name reco
-#RUN conda activate reco
+RUN conda env create -f environment.yaml --name reco
 
-#RUN echo "conda activate reco" > ~/.bashrc
-# ENV PATH /opt/conda/envs/env/bin:$PATH
+RUN echo "source activate reco" > ~/.bashrc
+
