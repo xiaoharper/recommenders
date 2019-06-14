@@ -4,6 +4,7 @@ import sys
 
 sys.path.append("../../")
 
+import datetime
 import argparse
 import os
 import pandas as pd
@@ -21,13 +22,20 @@ from reco_utils.evaluation.python_evaluation import *
 from reco_utils.recommender.surprise.surprise_utils import compute_rating_predictions, compute_ranking_predictions
 
 
+def log_utctime(run, timestamp_name):
+    cur_time = datetime.datetime.utcnow()
+    run.log(timestamp_name, cur_time.strftime("%m-%d-%Y %H:%M:%S.%f"))
+
+
 def svd_training(args):
     """
     Train Surprise SVD using the given hyper-parameters
     """
     print("Start training...")
+    log_utctime(run, "data_loading_start_time")
     train_data = pd.read_pickle(path=os.path.join(args.datastore, args.train_datapath))
     validation_data = pd.read_pickle(path=os.path.join(args.datastore, args.validation_datapath))
+    log_utctime(run, "data_loading_end_time")
 
     svd = surprise.SVD(random_state=args.random_state, n_epochs=args.epochs, verbose=args.verbose, biased=args.biased,
                        n_factors=args.n_factors, init_mean=args.init_mean, init_std_dev=args.init_std_dev,
@@ -53,7 +61,7 @@ def svd_training(args):
     ranking_metrics = args.ranking_metrics
     if len(ranking_metrics) > 0:
         all_predictions = compute_ranking_predictions(svd, train_data, usercol=args.usercol, itemcol=args.itemcol,
-                                                  recommend_seen=args.recommend_seen)
+                                                  remove_seen=args.recommend_seen)
         k = args.k
         for metric in ranking_metrics:
             result = eval(metric)(validation_data, all_predictions, col_prediction='prediction', k=k)
@@ -68,6 +76,7 @@ def svd_training(args):
 
 
 def main():
+    log_utctime(run, "main_script_start_time")
     parser = argparse.ArgumentParser()
     # Data path
     parser.add_argument('--datastore', type=str, dest='datastore', help="Datastore path")
@@ -109,10 +118,15 @@ def main():
     if HAS_AML:
         run.log('Number of epochs', args.epochs)
 
+    log_utctime(run, "train_script_start_time")
     svd = svd_training(args)
+    log_utctime(run, "train_script_end_time")
+
     # Save SVD model to the output directory for later use
     os.makedirs(args.output_dir, exist_ok=True)
     surprise.dump.dump(os.path.join(args.output_dir, 'model.dump'), algo=svd)
+    log_utctime(run, "main_script_end_time")
+
 
 
 if __name__ == "__main__":
