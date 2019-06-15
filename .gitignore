@@ -149,3 +149,4 @@ ml-20m/
 *.item
 *.pkl
 *kfapp/
+*jobs/
