@@ -32,11 +32,11 @@ def uniform(min_val, max_val):
     if min_val > max_val:
         raise ValueError("min_val should be less than max_val")
 
-    return '_uniform', [min_val, max_val]
+    return "_uniform", [min_val, max_val]
 
 
 def _uniform(name, min_max):
-    return manifest.UNIFORM_PARAM.format(name, 'double', min_max[0], min_max[1])
+    return manifest.UNIFORM_PARAM.format(name, min_max[0], min_max[1])
 
 
 def choice(options):
@@ -48,7 +48,7 @@ def choice(options):
     Returns:
         tuple: Hyperparameter spec
     """
-    return '_choice', options
+    return "_choice", options
 
 
 def _choice(name, list_val):
@@ -56,7 +56,7 @@ def _choice(name, list_val):
     return manifest.CHOICE_PARAM.format(name, items)
 
 
-def _format_hyperparam(hyperparams):
+def _format_hyperparams(hyperparams):
     """Format hyperparameter spec by using `_uniform` and `_choice`"""
     return "".join([globals()[v[0]](k, v[1]) for k, v in hyperparams.items()])
 
@@ -77,7 +77,7 @@ def worker_manifest(
         image_name (str): Name of the docker image
         entry_script (str): Path to the entry script in the image
         params (dict): Dictionary of script parameters.
-            E.g. {'--log-dir': "/train/{{{{.WorkerID}}}}"}
+            E.g. {'--log-dir': "/train/{{.WorkerID}}"}
         is_hypertune (bool): Whether the job is hyperparameter tuning or not
         storage_path (str): Mounted path of the persistent volume
         use_gpu (bool)
@@ -85,7 +85,15 @@ def worker_manifest(
     Returns:
         str: Worker manifest yaml string
     """
-    return _format_worker_spec(worker_type, image_name, entry_script, params, is_hypertune, storage_path, use_gpu)
+    return _format_worker_spec(
+        worker_type,
+        image_name,
+        entry_script,
+        params,
+        is_hypertune,
+        storage_path,
+        use_gpu,
+    )
 
 
 def make_hypertune_manifest(
@@ -130,28 +138,33 @@ def make_hypertune_manifest(
     if tag is None:
         studyjob_name = study_name
     else:
-        studyjob_name = study_name + '-{}'.format(tag)
+        studyjob_name = study_name + "-{}".format(tag)
 
     os.makedirs(JOB_DIR, exist_ok=True)
-    studyjob_file = os.path.join(JOB_DIR, '{}.yaml'.format(studyjob_name))
+    studyjob_file = os.path.join(JOB_DIR, "{}.yaml".format(studyjob_name))
 
     _make_yaml_from_template(
-        os.path.join(os.path.dirname(__file__), 'hypertune.template'),
+        os.path.join(os.path.dirname(__file__), "hypertune.template"),
         studyjob_file,
         **{
-            'NAME': studyjob_name,
-            'GOAL': goal,
-            'PRIMARY_METRIC': primary_metric,
-            'IDEAL_METRIC_VALUE': str(ideal_metric_value),
-            'REQUEST_COUNT': str(math.ceil(total_runs / concurrent_runs)),
-            'METRICS': _format_metrics(metrics),
-            'HYPERPARAM': _format_hyperparam(hyperparams),
-            'WORKER_SPEC': worker_spec,
-            'SPEC': _format_search_spec(search_type, concurrent_runs),
+            "NAME": studyjob_name,
+            "GOAL": goal,
+            "PRIMARY_METRIC": primary_metric,
+            "IDEAL_METRIC_VALUE": str(ideal_metric_value),
+            "REQUEST_COUNT": str(math.ceil(total_runs / concurrent_runs)),
+            "METRICS": _format_metrics(metrics),
+            "HYPERPARAMS": _format_hyperparams(hyperparams),
+            "WORKER_SPEC": worker_spec,
+            "SPEC": _format_search_spec(search_type, concurrent_runs),
         }
     )
 
-    print("StudyJob spec has been generated. To start, run 'kubectl create -f {}'".format(studyjob_file))
+    print(
+        "StudyJob manifest has been generated.\
+        To start, run 'kubectl create -f {}'".format(
+            studyjob_file
+        )
+    )
     return studyjob_name, studyjob_file
 
 
@@ -165,15 +178,23 @@ def _format_search_spec(search_type, concurrent_runs):
         raise ValueError("Unknown search type {}.".format(search_type))
 
 
-def _format_worker_spec(worker_type, image_name, entry_script, params, is_hypertune, storage_path, use_gpu):
+def _format_worker_spec(
+    worker_type, image_name, entry_script, params, is_hypertune, storage_path, use_gpu
+):
     if worker_type == manifest.WorkerType.WORKER:
         resources = manifest.WORKER_GPU if use_gpu else ""
-        hyperparam = manifest.WORKER_HYPERPARAM if is_hypertune else ""
+        hyperparam_parser = manifest.WORKER_HYPERPARAM_PARSER if is_hypertune else ""
+        params = [
+            manifest.WORKER_PARAM.format(
+                k if isinstance(v, str) and len(v) == 0 else "{}={}".format(k, v)
+            )
+            for k, v in params.items()
+        ]
         return manifest.WORKER_TEMPLATE.format(
             image_name,
             entry_script,
-            "".join([manifest.WORKER_PARAM.format("{}={}".format(k, v)) for k, v in params.items()]) + hyperparam,
-            "{{{{.StudyID}}}}",
+            "".join(params) + hyperparam_parser,
+            "{{.StudyID}}",
             storage_path,
             resources,
         )
@@ -205,10 +226,10 @@ def _format_metrics(metrics):
 def _make_yaml_from_template(template, filename, **kwargs):
     """Make manifest yaml file by replacing keywords in template with values.
     """
-    with open(template, 'r') as rf:
+    with open(template, "r") as rf:
         tmp = rf.read()
         if kwargs is not None:
             for k, v in kwargs.items():
-                tmp = tmp.replace('{{{}}}'.format(k), v)
-        with open(filename, 'w') as wf:
+                tmp = tmp.replace("{{{}}}".format(k), v)
+        with open(filename, "w") as wf:
             wf.write(tmp)

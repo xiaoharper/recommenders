@@ -91,12 +91,12 @@ TF_WORKER_GPU = """
 TF_WORKER_PARAM = """
                         - \"{}\""""
 
-TF_WORKER_HYPERPARAM = """
-                        {{{{- with .HyperParameters}}}}
-                        {{{{- range .}}}}
-                        - \"{{{{.Name}}}}={{{{.Value}}}}\"
-                        {{{{- end}}}}
-                        {{{{- end}}}}"""
+TF_WORKER_HYPERPARAM_PARSER = """
+                        {{- with .HyperParameters}}
+                        {{- range .}}
+                        - \"{{.Name}}={{.Value}}\"
+                        {{- end}}
+                        {{- end}}"""
 
 WORKER_TEMPLATE = """
         apiVersion: batch/v1
@@ -126,12 +126,12 @@ WORKER_TEMPLATE = """
 WORKER_PARAM = """
                 - \"{}\""""
 
-WORKER_HYPERPARAM = """
-                {{{{- with .HyperParameters}}}}
-                {{{{- range .}}}}
-                - \"{{{{.Name}}}}={{{{.Value}}}}\"
-                {{{{- end}}}}
-                {{{{- end}}}}"""
+WORKER_HYPERPARAM_PARSER = """
+                {{- with .HyperParameters}}
+                {{- range .}}
+                - \"{{.Name}}={{.Value}}\"
+                {{- end}}
+                {{- end}}"""
 
 WORKER_GPU = """
                 resources:
