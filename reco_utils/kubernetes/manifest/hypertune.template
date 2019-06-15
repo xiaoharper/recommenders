@@ -12,7 +12,7 @@ spec:
   objectivevaluename: {PRIMARY_METRIC}
   optimizationgoal: {IDEAL_METRIC_VALUE}
   requestcount: {REQUEST_COUNT}
-  metricsnames: {METRICS_LIST}
+  metricsnames: {METRICS}
   parameterconfigs: {HYPERPARAM}
   workerSpec:
     goTemplate:

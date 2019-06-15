@@ -14,4 +14,3 @@ RUN python /app/generate_conda_file.py $arg --name environment
 RUN conda env create -f environment.yaml --name reco
 
 RUN echo "source activate reco" > ~/.bashrc
-

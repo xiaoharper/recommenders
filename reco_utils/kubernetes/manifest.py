@@ -7,19 +7,30 @@ IMPORTANT!!!
 DO NOT CHANGE THE FORMAT of the strings in this file NOR AUTO-FORMAT
 """
 
+
+class Goal:
+    MAXIMIZE = 'maximize'
+    MINIMIZE = 'minimize'
+
+
+class SearchType:
+    RANDOM = 0
+    BAYESIAN = 1
+
+
 METRIC_ITEM = """
     - {}"""
 
 RANDOM_SPEC = """
-    suggestionAlgorithm: "random"
+    suggestionAlgorithm: \"random\"
     requestNumber: {}"""
 
 BAYESIAN_SPEC = """
-    suggestionAlgorithm: "bayesianoptimization"
+    suggestionAlgorithm: \"bayesianoptimization\"
     suggestionParameters:
       -
-          name: "burn_in"
-          value: "{1}"
+          name: \"burn_in\"
+          value: \"{1}\"
     requestNumber: {0}"""
 
 RANGE_PARAM = """
