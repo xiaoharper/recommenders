@@ -109,8 +109,11 @@ def svd_training(args):
 
 def main():
     parser = argparse.ArgumentParser()
+    # StudyID and TrialID. Passed by StudyJob controller
+    parser.add_argument("--study-id", type=str, dest="study_id")
+    parser.add_argument("--trial-id", type=str, dest="trial_id")
     # Data paths
-    parser.add_argument('--datastore', type=str, dest='datastore', help="Datastore path")
+    parser.add_argument("--datastore", type=str, dest="datastore", help="Datastore path")
     parser.add_argument("--train-datapath", type=str, dest="train_datapath")
     parser.add_argument("--validation-datapath", type=str, dest="validation_datapath")
     parser.add_argument("--output-dir", type=str, dest="output_dir", help="output directory")
@@ -148,7 +151,11 @@ def main():
 
     args = parser.parse_args()
 
-    output_dir = os.path.join(args.datastore, args.output_dir)
+    output_dir = os.path.join(
+        args.datastore,
+        "{}-{}".format(args.output_dir, args.study_id),
+        args.trial_id
+    )
     os.makedirs(output_dir, exist_ok=True)
     
     # python logger file

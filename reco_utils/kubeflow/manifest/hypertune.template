@@ -16,5 +16,5 @@ spec:
   parameterconfigs: {HYPERPARAMS}
   workerSpec:
     goTemplate:
-      rawTemplate: |- {WORKER_SPEC}
+      rawTemplate: |- {WORKER}
   suggestionSpec: {SPEC}

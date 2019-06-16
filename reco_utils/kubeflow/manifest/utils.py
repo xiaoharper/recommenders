@@ -8,16 +8,6 @@ import reco_utils.kubeflow.manifest as manifest
 
 JOB_DIR = "jobs"
 
-# TODO Maybe make API similar to Hyperdrive? e.g.:
-# ps = RandomParameterSampling(
-#     {
-#         '--batch-size': choice(25, 50, 100),
-#         '--first-layer-neurons': choice(10, 50, 200, 300, 500),
-#         '--second-layer-neurons': choice(10, 50, 200, 500),
-#         '--learning-rate': loguniform(-6, -1)
-#     }
-# )
-
 
 def uniform(min_val, max_val):
     """Uniform hyperparameter spec
@@ -61,7 +51,9 @@ def _format_hyperparams(hyperparams):
     return "".join([globals()[v[0]](k, v[1]) for k, v in hyperparams.items()])
 
 
-def worker_manifest(
+def make_worker_spec(
+    name,
+    tag=None,
     worker_type=manifest.WorkerType.WORKER,
     image_name=None,
     entry_script=None,
@@ -73,23 +65,35 @@ def worker_manifest(
     """Generate worker job manifest
 
     Args:
+        name (str): Job name. If tag is provided, the name will be 'name-tag'
+        tag (str): Job name tag
         worker_type (manifest.WorkerType): Type of the worker
         image_name (str): Name of the docker image
         entry_script (str): Path to the entry script in the image
         params (dict): Dictionary of script parameters.
-            E.g. {'--log-dir': "/train/{{.WorkerID}}"}
+            E.g. {'--datastore': "/data"}
         is_hypertune (bool): Whether the job is hyperparameter tuning or not
         storage_path (str): Mounted path of the persistent volume
         use_gpu (bool)
 
     Returns:
-        str: Worker manifest yaml string
+        str: Job name
+        str: Worker spec yaml string
     """
-    return _format_worker_spec(
+
+    if tag is None:
+        job_name = name
+    else:
+        job_name = name + "-{}".format(tag)
+
+    script_params = {k: v for k, v in params.items()}
+    script_params['--output-dir'] = job_name
+
+    return job_name, _format_worker_spec(
         worker_type,
         image_name,
         entry_script,
-        params,
+        script_params,
         is_hypertune,
         storage_path,
         use_gpu,
@@ -97,8 +101,6 @@ def worker_manifest(
 
 
 def make_hypertune_manifest(
-    study_name,
-    tag=None,
     search_type=manifest.SearchType.RANDOM,
     total_runs=1,
     concurrent_runs=1,
@@ -112,9 +114,6 @@ def make_hypertune_manifest(
     """Generate hyperparameter tuning StudyJob manifest file.
 
     Args:
-        study_name (str): Study name. StudyJob name will be <study_name>(-<tag>)
-        tag (str): Additional tag. E.g., if study_name = 'mnist-random' and tag = '1',
-            StudyJob name will be 'mnist-random-1'
         search_type (manifest.SearchType): Hyperparameter search algorithm
         total_runs (int): Number of total trials
         concurrent_runs (int): Number of concurrent runs
@@ -124,7 +123,7 @@ def make_hypertune_manifest(
         metrics (list): List of evaluation metrics to track
         hyperparams (dict): Dictionary of hyperparameters.
             E.g. {'--learning-rate': uniform(0.001, 0.05)}
-        worker_spec (str): Worker manifest
+        worker_spec (tuple): (Job name, Worker spec)
 
     Returns:
         str: StudyJob name
@@ -135,12 +134,8 @@ def make_hypertune_manifest(
     if total_runs < concurrent_runs:
         raise ValueError("Total runs should be equal or greater than concurrent runs.")
 
-    if tag is None:
-        studyjob_name = study_name
-    else:
-        studyjob_name = study_name + "-{}".format(tag)
-
     os.makedirs(JOB_DIR, exist_ok=True)
+    studyjob_name, worker = worker_spec
     studyjob_file = os.path.join(JOB_DIR, "{}.yaml".format(studyjob_name))
 
     _make_yaml_from_template(
@@ -154,14 +149,13 @@ def make_hypertune_manifest(
             "REQUEST_COUNT": str(math.ceil(total_runs / concurrent_runs)),
             "METRICS": _format_metrics(metrics),
             "HYPERPARAMS": _format_hyperparams(hyperparams),
-            "WORKER_SPEC": worker_spec,
+            "WORKER": worker,
             "SPEC": _format_search_spec(search_type, concurrent_runs),
         }
     )
 
     print(
-        "StudyJob manifest has been generated.\
-        To start, run 'kubectl create -f {}'".format(
+        "StudyJob manifest has been generated. To start, run 'kubectl create -f {}'".format(
             studyjob_file
         )
     )
@@ -184,7 +178,10 @@ def _format_worker_spec(
     if worker_type == manifest.WorkerType.WORKER:
         resources = manifest.WORKER_GPU if use_gpu else ""
         hyperparam_parser = manifest.WORKER_HYPERPARAM_PARSER if is_hypertune else ""
-        params = []
+        params = [
+            manifest.WORKER_PARAM.format("--study-id={{.StudyID}}"),
+            manifest.WORKER_PARAM.format("--trial-id={{.TrialID}}")
+        ]
         for k, v in script_params.items():
             if isinstance(v, (list, tuple, set)):
                 params.append(manifest.WORKER_PARAM.format(k))
@@ -193,9 +190,6 @@ def _format_worker_spec(
                 params.append(manifest.WORKER_PARAM.format(k))
             else:
                 params.append(manifest.WORKER_PARAM.format("{}={}".format(k, v)))
-
-        # Output directory
-        params.append(manifest.WORKER_PARAM.format("--output-dir={{.StudyID}}/{{.TrialID}}"))
 
         return manifest.WORKER_TEMPLATE.format(
             image_name,
