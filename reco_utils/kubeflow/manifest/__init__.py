@@ -76,8 +76,7 @@ TF_WORKER_TEMPLATE = """
                         - \"{1}\"{2}
                       volumeMounts:
                         - name: azurefile
-                          subPath: {3}
-                          mountPath: {4}{5}
+                          mountPath: {3}{4}
                   volumes:
                     - name: azurefile
                       persistentVolumeClaim:
@@ -116,8 +115,7 @@ WORKER_TEMPLATE = """
                 - \"{1}\"{2}
                 volumeMounts:
                   - name: azurefile
-                    subPath: {3}
-                    mountPath: {4}{5}
+                    mountPath: {3}{4}
               restartPolicy: Never
               volumes:
                 - name: azurefile

@@ -146,12 +146,15 @@ def main():
 
         args = parser.parse_args()
         print("Args:", str(vars(args)), sep="\n")
+        logging.debug(str(vars(args)))
     except Exception as e:
         logging.debug(str(e))
 
     _log('trial_start_time', time.time())
 
+    logging.debug('start training')
     svd = svd_training(args)
+    logging.debug('end training')
     # Save SVD model to the output directory for later use
     output_dir = os.path.join(args.datastore, args.output_dir)
     os.makedirs(output_dir, exist_ok=True)

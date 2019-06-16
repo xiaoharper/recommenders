@@ -194,11 +194,13 @@ def _format_worker_spec(
             else:
                 params.append(manifest.WORKER_PARAM.format("{}={}".format(k, v)))
 
+        # Output directory
+        params.append(manifest.WORKER_PARAM.format("--output-dir={{.StudyID}}/{{.TrialID}}"))
+
         return manifest.WORKER_TEMPLATE.format(
             image_name,
             entry_script,
             "".join(params) + hyperparam_parser,
-            "{{.StudyID}}",
             storage_path,
             resources,
         )

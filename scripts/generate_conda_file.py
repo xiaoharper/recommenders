@@ -36,7 +36,7 @@ CHANNELS = ["defaults", "conda-forge", "pytorch", "fastai"]
 
 CONDA_BASE = {
     "mock": "mock==2.0.0",
-    "dask": "dask>=0.17.1",
+    # "dask": "dask>=0.17.1",
     "fastparquet": "fastparquet>=0.1.6",
     "gitpython": "gitpython>=2.1.8",
     "ipykernel": "ipykernel>=4.6.1",
@@ -48,14 +48,14 @@ CONDA_BASE = {
     "pymongo": "pymongo>=3.6.1",
     "python": "python==3.6.8",
     "pytest": "pytest>=3.6.4",
-    "pytorch": "pytorch-cpu>=1.0.0",
+    # "pytorch": "pytorch-cpu>=1.0.0",
     "seaborn": "seaborn>=0.8.1",
     "scikit-learn": "scikit-learn==0.19.1",
     "scipy": "scipy>=1.0.0",
     "scikit-surprise": "scikit-surprise>=1.0.6",
     "swig": "swig==3.0.12",
-    "tensorflow": "tensorflow==1.12.0",
-    "lightgbm": "lightgbm==2.2.1",
+    # "tensorflow": "tensorflow==1.12.0",
+    # "lightgbm": "lightgbm==2.2.1",
 }
 
 CONDA_PYSPARK = {"pyarrow": "pyarrow>=0.8.0", "pyspark": "pyspark==2.3.1"}
@@ -67,14 +67,14 @@ CONDA_GPU = {
 }
 
 PIP_BASE = {
-    "azureml-sdk[notebooks,tensorboard]": "azureml-sdk[notebooks,tensorboard]==1.0.18",
-    "azure-storage": "azure-storage>=0.36.0",
+    # "azureml-sdk[notebooks,tensorboard]": "azureml-sdk[notebooks,tensorboard]==1.0.18",
+    # "azure-storage": "azure-storage>=0.36.0",
     "black": "black>=18.6b4",
     "category_encoders": "category_encoders>=1.3.0",
-    "databricks-cli": "databricks-cli==0.8.6",
+    # "databricks-cli": "databricks-cli==0.8.6",
     "dataclasses": "dataclasses>=0.6",
-    "fastai": "fastai==1.0.46",
-    "hyperopt": "hyperopt==0.1.1",
+    # "fastai": "fastai==1.0.46",
+    # "hyperopt": "hyperopt==0.1.1",
     "idna": "idna==2.7",
     "locustio": "locustio==0.11.0",
     "memory-profiler": "memory-profiler>=0.54.0",
@@ -89,10 +89,10 @@ PIP_GPU = {}
 PIP_PYSPARK = {}
 
 PIP_DARWIN = {
-    "nni": "nni==0.5.2.1",
+    # "nni": "nni==0.5.2.1",
 }
 PIP_LINUX = {
-    "nni": "nni==0.5.2.1",
+    # "nni": "nni==0.5.2.1",
 }
 PIP_WIN32 = {}
 
