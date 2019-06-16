@@ -110,6 +110,7 @@ WORKER_TEMPLATE = """
               containers:
               - name: {{{{.WorkerID}}}}
                 image: {0}
+                imagePullPolicy: Always
                 command:
                 - \"python\"
                 - \"{1}\"{2}

@@ -179,17 +179,21 @@ def _format_search_spec(search_type, concurrent_runs):
 
 
 def _format_worker_spec(
-    worker_type, image_name, entry_script, params, is_hypertune, storage_path, use_gpu
+    worker_type, image_name, entry_script, script_params, is_hypertune, storage_path, use_gpu
 ):
     if worker_type == manifest.WorkerType.WORKER:
         resources = manifest.WORKER_GPU if use_gpu else ""
         hyperparam_parser = manifest.WORKER_HYPERPARAM_PARSER if is_hypertune else ""
-        params = [
-            manifest.WORKER_PARAM.format(
-                k if isinstance(v, str) and len(v) == 0 else "{}={}".format(k, v)
-            )
-            for k, v in params.items()
-        ]
+        params = []
+        for k, v in script_params.items():
+            if isinstance(v, (list, tuple, set)):
+                params.append(manifest.WORKER_PARAM.format(k))
+                params.extend([manifest.WORKER_PARAM.format(i) for i in v])
+            elif isinstance(v, str) and len(v) == 0:
+                params.append(manifest.WORKER_PARAM.format(k))
+            else:
+                params.append(manifest.WORKER_PARAM.format("{}={}".format(k, v)))
+
         return manifest.WORKER_TEMPLATE.format(
             image_name,
             entry_script,

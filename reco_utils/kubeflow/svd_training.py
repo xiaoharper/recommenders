@@ -2,18 +2,27 @@
 # Licensed under the MIT License.
 
 # TODO we can make the script more general so that AzureML and Kubeflow can use the same file for training
-# import sys
-#
-# sys.path.append("../../")
-
 import argparse
+import logging
+logging.basicConfig(filename='/data/kubeflow.log', level=logging.DEBUG)
+
 import os
 import time
 
 import surprise
 import pandas as pd
 
-from reco_utils.evaluation.python_evaluation import *
+# Evaluation functions will be called by name
+from reco_utils.evaluation.python_evaluation import (
+    rmse,
+    mae,
+    rsquared,
+    exp_var,
+    precision_at_k,
+    recall_at_k,
+    ndcg_at_k,
+    map_at_k,
+)
 from reco_utils.recommender.surprise.surprise_utils import (
     compute_rating_predictions,
     compute_ranking_predictions,
@@ -96,46 +105,49 @@ def svd_training(args):
 
 
 def main():
-    parser = argparse.ArgumentParser()
-    # Data paths
-    parser.add_argument('--datastore', type=str, dest='datastore', help="Datastore path")
-    parser.add_argument("--train-datapath", type=str, dest="train_datapath")
-    parser.add_argument("--validation-datapath", type=str, dest="validation_datapath")
-    parser.add_argument("--output-dir", type=str, dest="output_dir", help="output directory")
-    parser.add_argument("--surprise-reader", type=str, dest="surprise_reader")
-    parser.add_argument("--usercol", type=str, dest="usercol", default="userID")
-    parser.add_argument("--itemcol", type=str, dest="itemcol", default="itemID")
-    # Metrics
-    parser.add_argument(
-        "--rating-metrics", type=str, nargs="*", dest="rating_metrics", default=[]
-    )
-    parser.add_argument(
-        "--ranking-metrics", type=str, nargs="*", dest="ranking_metrics", default=[]
-    )
-    parser.add_argument("--k", type=int, dest="k", default=None)
-    parser.add_argument("--remove-seen", dest="remove_seen", action="store_true")
-    # Training parameters
-    parser.add_argument("--random-state", type=int, dest="random_state", default=0)
-    parser.add_argument("--verbose", dest="verbose", action="store_true")
-    parser.add_argument("--epochs", type=int, dest="epochs", default=30)
-    parser.add_argument("--biased", dest="biased", action="store_true")
-    # Hyperparameters to be tuned
-    parser.add_argument("--n-factors", type=int, dest="n_factors", default=100)
-    parser.add_argument("--init-mean", type=float, dest="init_mean", default=0.0)
-    parser.add_argument("--init-std-dev", type=float, dest="init_std_dev", default=0.1)
-    parser.add_argument("--lr-all", type=float, dest="lr_all", default=0.005)
-    parser.add_argument("--reg-all", type=float, dest="reg_all", default=0.02)
-    parser.add_argument("--lr-bu", type=float, dest="lr_bu", default=None)
-    parser.add_argument("--lr-bi", type=float, dest="lr_bi", default=None)
-    parser.add_argument("--lr-pu", type=float, dest="lr_pu", default=None)
-    parser.add_argument("--lr-qi", type=float, dest="lr_qi", default=None)
-    parser.add_argument("--reg-bu", type=float, dest="reg_bu", default=None)
-    parser.add_argument("--reg-bi", type=float, dest="reg_bi", default=None)
-    parser.add_argument("--reg-pu", type=float, dest="reg_pu", default=None)
-    parser.add_argument("--reg-qi", type=float, dest="reg_qi", default=None)
+    try:
+        parser = argparse.ArgumentParser()
+        # Data paths
+        parser.add_argument('--datastore', type=str, dest='datastore', help="Datastore path")
+        parser.add_argument("--train-datapath", type=str, dest="train_datapath")
+        parser.add_argument("--validation-datapath", type=str, dest="validation_datapath")
+        parser.add_argument("--output-dir", type=str, dest="output_dir", help="output directory")
+        parser.add_argument("--surprise-reader", type=str, dest="surprise_reader")
+        parser.add_argument("--usercol", type=str, dest="usercol", default="userID")
+        parser.add_argument("--itemcol", type=str, dest="itemcol", default="itemID")
+        # Metrics
+        parser.add_argument(
+            "--rating-metrics", type=str, nargs="*", dest="rating_metrics", default=[]
+        )
+        parser.add_argument(
+            "--ranking-metrics", type=str, nargs="*", dest="ranking_metrics", default=[]
+        )
+        parser.add_argument("--k", type=int, dest="k", default=None)
+        parser.add_argument("--remove-seen", dest="remove_seen", action="store_true")
+        # Training parameters
+        parser.add_argument("--random-state", type=int, dest="random_state", default=0)
+        parser.add_argument("--verbose", dest="verbose", action="store_true")
+        parser.add_argument("--epochs", type=int, dest="epochs", default=30)
+        parser.add_argument("--biased", dest="biased", action="store_true")
+        # Hyperparameters to be tuned
+        parser.add_argument("--n-factors", type=int, dest="n_factors", default=100)
+        parser.add_argument("--init-mean", type=float, dest="init_mean", default=0.0)
+        parser.add_argument("--init-std-dev", type=float, dest="init_std_dev", default=0.1)
+        parser.add_argument("--lr-all", type=float, dest="lr_all", default=0.005)
+        parser.add_argument("--reg-all", type=float, dest="reg_all", default=0.02)
+        parser.add_argument("--lr-bu", type=float, dest="lr_bu", default=None)
+        parser.add_argument("--lr-bi", type=float, dest="lr_bi", default=None)
+        parser.add_argument("--lr-pu", type=float, dest="lr_pu", default=None)
+        parser.add_argument("--lr-qi", type=float, dest="lr_qi", default=None)
+        parser.add_argument("--reg-bu", type=float, dest="reg_bu", default=None)
+        parser.add_argument("--reg-bi", type=float, dest="reg_bi", default=None)
+        parser.add_argument("--reg-pu", type=float, dest="reg_pu", default=None)
+        parser.add_argument("--reg-qi", type=float, dest="reg_qi", default=None)
 
-    args = parser.parse_args()
-    print("Args:", str(vars(args)), sep="\n")
+        args = parser.parse_args()
+        print("Args:", str(vars(args)), sep="\n")
+    except Exception as e:
+        logging.debug(str(e))
 
     _log('trial_start_time', time.time())
 
