@@ -1,0 +1,76 @@
+
+  Best Objective Value:     0.06325878947973251
+  Best Trial Id:            d67868ca8f5816d2
+  Best Worker Id:           n559a94c55075b6c
+  Completion Time:          2019-06-17T02:43:21Z
+  Condition:                Completed
+  Last Reconcile Time:      2019-06-17T02:43:21Z
+  Start Time:               2019-06-17T02:42:03Z
+  Studyid:                  e6536d1be72a6c24
+  Suggestion Count:         1
+  Suggestion Parameter Id:  vbdc3f33bcb15f0e
+  Trials:
+    Trialid:  h7cc3f351710f118
+    Workeridlist:
+      Completion Time:  2019-06-17T02:43:18Z
+      Condition:        Completed
+      Kind:             Job
+      Objective Value:  0.005431309808045626
+      Start Time:       2019-06-17T02:42:05Z
+      Workerid:         u5623ce7945cb3a4
+    Trialid:            o09f4df8dbbf4fef
+    Workeridlist:
+      Completion Time:  2019-06-17T02:43:18Z
+      Condition:        Completed
+      Kind:             Job
+      Objective Value:  0.007880724035203457
+      Start Time:       2019-06-17T02:42:05Z
+      Workerid:         vc264c24c4c1ce7c
+    Trialid:            kc1d8fa971926fb1
+    Workeridlist:
+      Completion Time:  2019-06-17T02:43:16Z
+      Condition:        Completed
+      Kind:             Job
+      Objective Value:  0.000638977624475956
+      Start Time:       2019-06-17T02:42:05Z
+      Workerid:         i623923a8dc8b932
+    Trialid:            d67868ca8f5816d2
+    Workeridlist:
+      Completion Time:  2019-06-17T02:43:18Z
+      Condition:        Completed
+      Kind:             Job
+      Objective Value:  0.06325878947973251
+      Start Time:       2019-06-17T02:42:05Z
+      Workerid:         n559a94c55075b6c
+    Trialid:            ye823a67ae1885fb
+    Workeridlist:
+      Completion Time:  2019-06-17T02:43:16Z
+      Condition:        Completed
+      Kind:             Job
+      Objective Value:  0.0039403620176017284
+      Start Time:       2019-06-17T02:42:05Z
+      Workerid:         n43c1ec51709d67a
+    Trialid:            h9d1b169cb952dbb
+    Workeridlist:
+      Completion Time:  2019-06-17T02:43:16Z
+      Condition:        Completed
+      Kind:             Job
+      Objective Value:  0.022577209398150444
+      Start Time:       2019-06-17T02:42:05Z
+      Workerid:         gd60afeba9e38a77
+    Trialid:            xb99e5133172348a
+    Workeridlist:
+      Completion Time:  2019-06-17T02:43:16Z
+      Condition:        Completed
+      Kind:             Job
+      Objective Value:  0.008732694201171398
+      Start Time:       2019-06-17T02:42:05Z
+      Workerid:         c8645b9170a0dfc8
+    Trialid:            t4ef54045c9f68de
+    Workeridlist:
+      Completion Time:  2019-06-17T02:43:17Z
+      Condition:        Completed
+      Kind:             Job
+      Objective Value:  0.00681576132774353
+      Start Time:       2019-06-17T02:42:05Z
+      Workerid:         l7299c0a77e6efaa

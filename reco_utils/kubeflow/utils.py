@@ -1,12 +1,18 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import json
 import math
 import os
-import reco_utils.kubeflow.manifest as manifest
+import requests
+import subprocess
+import time
+import yaml
+from reco_utils.kubeflow import manifest
 
 
 JOB_DIR = "jobs"
+RESULT_DIR = "results"
 
 
 def uniform(min_val, max_val):
@@ -139,7 +145,7 @@ def make_hypertune_manifest(
     studyjob_file = os.path.join(JOB_DIR, "{}.yaml".format(studyjob_name))
 
     _make_yaml_from_template(
-        os.path.join(os.path.dirname(__file__), "hypertune.template"),
+        os.path.join(os.path.dirname(__file__), "manifest", "hypertune.template"),
         studyjob_file,
         **{
             "NAME": studyjob_name,
@@ -233,3 +239,84 @@ def _make_yaml_from_template(template, filename, **kwargs):
                 tmp = tmp.replace("{{{}}}".format(k), v)
         with open(filename, "w") as wf:
             wf.write(tmp)
+
+
+def _connect():
+    """Check port-forwarding and re-tunneling if connection lost"""
+    return subprocess.Popen("kubectl port-forward svc/vizier-core-rest 6790:80", shell=True)
+
+
+def get_study_metrics(study_id, worker_ids, metrics_names=None, timeout_sec=10.0):
+    """Get metrics
+
+    Args:
+        study_id (str):
+        worker_ids (list of str):
+        metrics_names (list of str):
+        timeout_sec (float): Request timeout in sec
+
+    Returns:
+        (json): metrics
+    """
+    data = {
+        'study_id': study_id,
+        'worker_ids': worker_ids,
+        'metrics_names': metrics_names
+    }
+    json_data = json.dumps(data)
+
+    while timeout_sec > 0.0:
+        try:
+            response = _post("http://localhost:6791/api/Manager/GetMetrics", json_data)
+            return response  # ['metrics_log_sets'][0]['metrics_logs'][0]['values'][0]['value']
+        except requests.ConnectionError:
+            _connect()
+            timeout_sec -= 0.5
+            time.sleep(0.5)
+
+    raise TimeoutError("Connection timeout")
+
+
+def _post(url, json_data):
+    resp = requests.post(
+        url, data=json_data, headers={'Content-type': 'application/json'}
+    )
+    resp.raise_for_status()
+
+    return resp.json()
+
+
+def get_study_result(studyjob_name, verbose=True, write_result=True):
+    # Note, Parameter configs keys are duplicated in the result. Should not use when parse the result.
+    study_result = subprocess.run(
+        ['kubectl', 'describe', 'studyjob', studyjob_name],
+        stdout=subprocess.PIPE
+    ).stdout.decode('utf-8')
+    if verbose:
+        print(study_result, "\n\n")
+
+    study_result = study_result.split("Status:", 1)[1].split("Events:", 1)[0]
+
+    try:
+        r = yaml.safe_load(study_result)
+        print("Study name:", studyjob_name)
+        print("Study id:", r['Studyid'])
+        print("Duration:", (r['Completion Time'] - r['Start Time']).total_seconds())
+        print("Best trial:", r['Best Trial Id'])
+        print("Best worker:", r['Best Worker Id'])
+        print("Best object value:", r['Best Objective Value'])
+    except KeyError:
+        print("Study is still running or not completed")
+        return
+
+    # Cache (backup) results as yaml file for later use
+    if write_result:
+        os.makedirs(RESULT_DIR, exist_ok=True)
+
+        result_filename = os.path.join(RESULT_DIR, "{}-result.yaml".format(studyjob_name))
+        with open(result_filename, 'w') as f:
+            f.write(study_result)
+
+        print("Result is saved to {}".format(result_filename))
+
+    return r
