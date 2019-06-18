@@ -34,7 +34,6 @@ parser.add_argument("--datastore", type=str, dest="datastore", help="Datastore p
 parser.add_argument("--train-datapath", type=str, dest="train_datapath")
 parser.add_argument("--test-datapath", type=str, dest="test_datapath")
 parser.add_argument("--output-dir", type=str, dest="output_dir", help="output directory")
-parser.add_argument("--surprise-reader", type=str, dest="surprise_reader")
 parser.add_argument("--usercol", type=str, dest="usercol", default="userID")
 parser.add_argument("--itemcol", type=str, dest="itemcol", default="itemID")
 # Metrics
