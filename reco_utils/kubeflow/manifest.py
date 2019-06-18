@@ -83,9 +83,9 @@ TF_WORKER_TEMPLATE = """
                         claimName: azurefile"""
 
 TF_WORKER_GPU = """
-                  resources:
-                    limits:
-                      nvidia.com/gpu: 1"""
+                      resources:
+                        limits:
+                          nvidia.com/gpu: 1"""
 
 TF_WORKER_PARAM = """
                         - \"{}\""""

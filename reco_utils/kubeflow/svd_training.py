@@ -108,6 +108,8 @@ def svd_training(args):
 
 
 def main():
+    starttime = time.time()
+
     parser = argparse.ArgumentParser()
     # StudyID and TrialID. Passed by StudyJob controller
     parser.add_argument("--study-id", type=str, dest="study_id")
@@ -165,7 +167,7 @@ def main():
 
     logger.info("Args:\n{}".format(str(vars(args))))
     
-    _record('trial_start_time', time.time())
+    _record('trial_start_time', starttime)
 
     # SVD training and validation
     svd = svd_training(args)
