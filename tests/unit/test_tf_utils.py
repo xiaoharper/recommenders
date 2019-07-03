@@ -128,7 +128,7 @@ def test_evaluation_log_hook(pd_df, tmp):
     _, deep_columns = build_feature_columns(users, items, model_type='deep')
 
     model = build_model(
-        tmp,
+        model_dir=tmp,
         deep_columns=deep_columns,
         save_checkpoints_steps=train_steps//hook_frequency
     )
@@ -176,7 +176,7 @@ def test_pandas_input_fn_for_saved_model(pd_df, tmp):
 
     # Train a model
     model = build_model(
-        model_dir,
+        model_dir=model_dir,
         deep_columns=deep_columns,
     )
     train_fn = pandas_input_fn(

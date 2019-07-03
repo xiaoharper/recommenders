@@ -55,7 +55,7 @@ CONDA_BASE = {
     "scipy": "scipy>=1.0.0",
     "scikit-surprise": "scikit-surprise>=1.0.6",
     "swig": "swig==3.0.12",
-    "tensorflow": "tensorflow==1.12.0",
+    "tensorflow": "tensorflow>=1.12.0",
     "lightgbm": "lightgbm==2.2.1",
 }
 
@@ -64,7 +64,7 @@ CONDA_PYSPARK = {"pyarrow": "pyarrow>=0.8.0", "pyspark": "pyspark==2.3.1"}
 CONDA_GPU = {
     "numba": "numba>=0.38.1",
     "pytorch": "pytorch>=1.0.0",
-    "tensorflow": "tensorflow-gpu==1.12.0",
+    "tensorflow": "tensorflow-gpu>=1.12.0",
 }
 
 PIP_BASE = {

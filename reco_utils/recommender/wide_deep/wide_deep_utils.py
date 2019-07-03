@@ -117,6 +117,7 @@ def _build_deep_columns(user_ids, item_ids, user_dim, item_dim,
 
 
 def build_model(
+    problem_type='regression',
     model_dir=MODEL_DIR,
     wide_columns=(),
     deep_columns=(),
@@ -135,6 +136,7 @@ def build_model(
     To generate wide_deep model, pass both wide_columns and deep_columns.
 
     Args:
+        problem_type (str): Type of the problem. Either 'regression' or 'classification'.
         model_dir (str): Model checkpoint directory.
         wide_columns (list of tf.feature_column): Wide model feature columns.
         deep_columns (list of tf.feature_column): Deep model feature columns.
@@ -150,6 +152,9 @@ def build_model(
     Returns:
         tf.estimator.Estimator: Model
     """
+    if problem_type not in ('regression', 'classification'):
+        raise ValueError("Problem type should be either 'regression' or 'classification'.")
+
     # TensorFlow training log frequency setup
     config = tf.estimator.RunConfig(
         tf_random_seed=seed,
@@ -157,37 +162,43 @@ def build_model(
         save_checkpoints_steps=save_checkpoints_steps,
     )
 
-    if len(wide_columns) > 0 and len(deep_columns) == 0:
-        model = tf.estimator.LinearRegressor(
-            model_dir=model_dir,
-            config=config,
-            feature_columns=wide_columns,
-            optimizer=linear_optimizer
-        )
-    elif len(wide_columns) == 0 and len(deep_columns) > 0:
-        model = tf.estimator.DNNRegressor(
-            model_dir=model_dir,
-            config=config,
-            feature_columns=deep_columns,
-            hidden_units=dnn_hidden_units,
-            optimizer=dnn_optimizer,
-            dropout=dnn_dropout,
-            batch_norm=dnn_batch_norm
-        )
-    elif len(wide_columns) > 0 and len(deep_columns) > 0:
-        model = tf.estimator.DNNLinearCombinedRegressor(
-            model_dir=model_dir,
-            config=config,
-            # wide settings
-            linear_feature_columns=wide_columns,
-            linear_optimizer=linear_optimizer,
-            # deep settings
-            dnn_feature_columns=deep_columns,
-            dnn_hidden_units=dnn_hidden_units,
-            dnn_optimizer=dnn_optimizer,
-            dnn_dropout=dnn_dropout,
-            batch_norm=dnn_batch_norm
-        )
+    params = {
+        'model_dir': model_dir,
+        'config': config,
+    }
+
+    if (wide_columns and len(wide_columns) > 0) and (not deep_columns or len(deep_columns) == 0):
+        if problem_type == 'regression':
+            model = tf.estimator.LinearRegressor
+        else:
+            model = tf.estimator.LinearClassifier
+            params['n_classes'] = 2
+        params['feature_columns'] = wide_columns
+        params['optimizer'] = linear_optimizer
+    elif (not wide_columns or len(wide_columns) == 0) and (deep_columns and len(deep_columns) > 0):
+        if problem_type == 'regression':
+            model = tf.estimator.DNNRegressor
+        else:
+            model = tf.estimator.DNNClassifier
+            params['n_classes'] = 2
+        params['feature_columns'] = deep_columns
+        params['hidden_units'] = dnn_hidden_units
+        params['optimizer'] = dnn_optimizer
+        params['dropout'] = dnn_dropout
+        params['batch_norm'] = dnn_batch_norm
+    elif wide_columns and len(wide_columns) > 0 and deep_columns and len(deep_columns) > 0:
+        if problem_type == 'regression':
+            model = tf.estimator.DNNLinearCombinedRegressor
+        else:
+            model = tf.estimator.DNNLinearCombinedClassifier
+            params['n_classes'] = 2
+        params['linear_feature_columns'] = wide_columns
+        params['linear_optimizer'] = linear_optimizer
+        params['dnn_feature_columns'] = deep_columns
+        params['dnn_hidden_units'] = dnn_hidden_units
+        params['dnn_optimizer'] = dnn_optimizer
+        params['dnn_dropout'] = dnn_dropout
+        params['batch_norm'] = dnn_batch_norm
     else:
         raise ValueError(
             "To generate wide model, set wide_columns.\n"
@@ -195,4 +206,4 @@ def build_model(
             "To generate wide_deep model, set both wide_columns and deep_columns."
         )
 
-    return model
+    return model(**params)

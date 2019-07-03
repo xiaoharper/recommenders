@@ -35,7 +35,7 @@ def pd_df():
                 [4, 4, 4],
                 [5, 5, 5],
             ],
-            DEFAULT_RATING_COL: [5, 4, 3, 5, 5, 3],
+            DEFAULT_RATING_COL: [0, 1, 0, 1, 1, 0],
         }
     )
     users = df.drop_duplicates(DEFAULT_USER_COL)[DEFAULT_USER_COL].values
@@ -56,11 +56,31 @@ def test_wide_deep(pd_df, tmp):
     assert len(wide_columns) == 3
     # Check crossed feature dimension
     assert wide_columns[2].hash_bucket_size == 10
-    # Check model type
+    # Check model type: regression
     model = build_model(
-        os.path.join(tmp, 'wide_' + MODEL_DIR), wide_columns=wide_columns
+        problem_type='regression',
+        model_dir=os.path.join(tmp, 'r_wide_' + MODEL_DIR),
+        wide_columns=wide_columns
     )
     assert isinstance(model, tf.estimator.LinearRegressor)
+    # Test if model train works
+    model.train(
+        input_fn=pandas_input_fn(
+            df=data,
+            y_col=DEFAULT_RATING_COL,
+            batch_size=1,
+            num_epochs=None,
+            shuffle=True,
+        ),
+        steps=1,
+    )
+    # Check model type: classification
+    model = build_model(
+        problem_type='classification',
+        model_dir=os.path.join(tmp, 'c_wide_' + MODEL_DIR),
+        wide_columns=wide_columns
+    )
+    assert isinstance(model, tf.estimator.LinearClassifier)
     # Test if model train works
     model.train(
         input_fn=pandas_input_fn(
@@ -77,11 +97,26 @@ def test_wide_deep(pd_df, tmp):
     # Test if deep columns have user and item features
     _, deep_columns = build_feature_columns(users, items, model_type='deep')
     assert len(deep_columns) == 2
-    # Check model type
+    # Check model type: regression
     model = build_model(
-        os.path.join(tmp, 'deep_' + MODEL_DIR), deep_columns=deep_columns
+        problem_type='regression',
+        model_dir=os.path.join(tmp, 'r_deep_' + MODEL_DIR),
+        deep_columns=deep_columns
     )
     assert isinstance(model, tf.estimator.DNNRegressor)
+    # Test if model train works
+    model.train(
+        input_fn=pandas_input_fn(
+            df=data, y_col=DEFAULT_RATING_COL, batch_size=1, num_epochs=1, shuffle=False
+        )
+    )
+    # Check model type: classification
+    model = build_model(
+        problem_type='classification',
+        model_dir=os.path.join(tmp, 'r_deep_' + MODEL_DIR),
+        deep_columns=deep_columns
+    )
+    assert isinstance(model, tf.estimator.DNNClassifier)
     # Test if model train works
     model.train(
         input_fn=pandas_input_fn(
@@ -98,7 +133,8 @@ def test_wide_deep(pd_df, tmp):
     assert len(deep_columns) == 2
     # Check model type
     model = build_model(
-        os.path.join(tmp, 'wide_deep_' + MODEL_DIR),
+        problem_type='regression',
+        model_dir=os.path.join(tmp, 'r_wide_deep_' + MODEL_DIR),
         wide_columns=wide_columns,
         deep_columns=deep_columns,
     )
@@ -114,3 +150,23 @@ def test_wide_deep(pd_df, tmp):
         ),
         steps=1,
     )
+    # Check model type
+    model = build_model(
+        problem_type='classification',
+        model_dir=os.path.join(tmp, 'c_wide_deep_' + MODEL_DIR),
+        wide_columns=wide_columns,
+        deep_columns=deep_columns,
+    )
+    assert isinstance(model, tf.estimator.DNNLinearCombinedClassifier)
+    # Test if model train works
+    model.train(
+        input_fn=pandas_input_fn(
+            df=data,
+            y_col=DEFAULT_RATING_COL,
+            batch_size=1,
+            num_epochs=None,
+            shuffle=True,
+        ),
+        steps=1,
+    )
+
