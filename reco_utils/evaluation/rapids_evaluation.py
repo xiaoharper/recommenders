@@ -65,3 +65,23 @@ def rmse(
     )
     squared_error = (y_true - y_pred)**2
     return np.sqrt(squared_error.mean())
+
+
+def mae(
+    rating_true,
+    rating_pred,
+    col_user=DEFAULT_USER_COL,
+    col_item=DEFAULT_ITEM_COL,
+    col_rating=DEFAULT_RATING_COL,
+    col_prediction=DEFAULT_PREDICTION_COL,
+):
+    y_true, y_pred = merge_rating_true_pred(
+        rating_true=rating_true,
+        rating_pred=rating_pred,
+        col_user=col_user,
+        col_item=col_item,
+        col_rating=col_rating,
+        col_prediction=col_prediction,
+    )
+    
+    return (y_true - y_pred).abs().mean()

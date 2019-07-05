@@ -9,6 +9,10 @@ from reco_utils.common.constants import (
     DEFAULT_K,
     DEFAULT_THRESHOLD,
 )
+from reco_utils.evaluation.rapids_evaluation import (
+    ramse,
+    mae,
+)
 
 TOL = 0.0001
 
@@ -121,3 +125,15 @@ def test_rapids_rmse(rating_true, rating_pred):
         == 0
     )
     assert rmse(rating_true, rating_pred) == pytest.approx(7.254309, TOL)
+
+    
+def test_rapids_mae(rating_true, rating_pred):
+    assert (
+        mae(
+            rating_true=rating_true,
+            rating_pred=rating_true,
+            col_prediction=DEFAULT_RATING_COL,
+        )
+        == 0
+    )
+    assert mae(rating_true, rating_pred) == pytest.approx(6.375, TOL)
