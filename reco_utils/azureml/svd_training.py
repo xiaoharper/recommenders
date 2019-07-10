@@ -40,15 +40,16 @@ def svd_training(args):
     print("Evaluating...")
     if args.engine == 'rapids':
         import cudf as cu
-        from reco_utils.evaluation.rapids_evaluation import *
+        from reco_utils.evaluation.rapids_evaluation import mae, rmse, precision_at_k, recall_at_k, ndcg_at_k
     else:
-        from reco_utils.evaluation.python_evaluation import *
+        from reco_utils.evaluation.python_evaluation import mae, rmse, precision_at_k, recall_at_k, ndcg_at_k
 
     rating_metrics = args.rating_metrics
     if len(rating_metrics) > 0:
         predictions = compute_rating_predictions(svd, validation_data, usercol=args.usercol, itemcol=args.itemcol)
         if args.engine == 'rapids':
             predictions = cu.from_pandas(predictions)
+            validation_data = cu.from_pandas(validation_data)
 
         for metric in rating_metrics:
             result = eval(metric)(validation_data, predictions)
@@ -62,7 +63,9 @@ def svd_training(args):
                                                       remove_seen=args.remove_seen)
         if args.engine == 'rapids':
             all_predictions = cu.from_pandas(all_predictions)
-
+            if not isinstance(validation_data, cu.DataFrame):
+                validation_data = cu.from_pandas(validation_data)
+            
         k = args.k
         for metric in ranking_metrics:
             result = eval(metric)(validation_data, all_predictions, col_prediction='prediction', k=k)
