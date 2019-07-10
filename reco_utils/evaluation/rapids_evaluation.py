@@ -403,3 +403,15 @@ def map_at_k(
 
     df_merge = pd.merge(df_hit_sorted, df_hit_count, on=col_user)
     return (df_merge["rr"] / df_merge["actual"]).sum() / n_users
+
+
+"""Function name and function mapper.
+Useful when we have to serialize evaluation metric names
+and call the functions based on deserialized names"""
+metrics = {
+    rmse.__name__: rmse,
+    mae.__name__: mae,
+    precision_at_k.__name__: precision_at_k,
+    recall_at_k.__name__: recall_at_k,
+    ndcg_at_k.__name__: ndcg_at_k,
+}

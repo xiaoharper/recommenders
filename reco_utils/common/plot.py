@@ -10,6 +10,7 @@ def bar_chart(
     y_name=None,
     bar_width=0.35,
     tick_labels=None,
+    title=None,
 ):
     if errors:
         assert len(values) == len(errors)
@@ -36,7 +37,7 @@ def bar_chart(
     ax.set_xticks(ind)
     if tick_labels: ax.set_xticklabels(tick_labels)
     ax.legend()
-
+    if title: ax.title.set_text(title)
     fig.tight_layout()
 
 

@@ -195,6 +195,7 @@ def evaluation_log_hook(
     model_dir=None,
     batch_size=256,
     eval_fns=None,
+    eval_engine='pandas',
     **eval_kwargs
 ):
     """Evaluation log hook for TensorFlow high-level API Estimator.
@@ -215,6 +216,7 @@ def evaluation_log_hook(
             Note, the batch size doesn't affect on evaluation results.
         eval_fns (iterable of functions): List of evaluation functions that have signature of
             (true_df, prediction_df, **eval_kwargs)->(float). If None, loss is calculated on true_df.
+        eval_engine (str): If 'rapids', use cuDF for evaluations.
         **eval_kwargs: Evaluation function's keyword arguments.
             Note, prediction column name should be 'prediction'
 
@@ -232,6 +234,7 @@ def evaluation_log_hook(
         model_dir,
         batch_size,
         eval_fns,
+        eval_engine,
         **eval_kwargs
     )
 
@@ -262,6 +265,7 @@ class _TrainLogHook(tf.train.SessionRunHook):
         model_dir=None,
         batch_size=256,
         eval_fns=None,
+        eval_engine='pandas',
         **eval_kwargs
     ):
         """Evaluation log hook class"""
@@ -274,6 +278,7 @@ class _TrainLogHook(tf.train.SessionRunHook):
         self.model_dir = model_dir
         self.batch_size = batch_size
         self.eval_fns = eval_fns
+        self.eval_engine = eval_engine
         self.eval_kwargs = eval_kwargs
 
         self.summary_writer = None
@@ -322,10 +327,24 @@ class _TrainLogHook(tf.train.SessionRunHook):
                         len(self.eval_df),
                     )
                 )
-                prediction_df = self.eval_df.copy()
+
+                true_df = self.true_df[[
+                    self.eval_kwargs['col_user'],
+                    self.eval_kwargs['col_item'],
+                    self.eval_kwargs['col_rating']
+                ]]
+                prediction_df = self.eval_df[[
+                    self.eval_kwargs['col_user'],
+                    self.eval_kwargs['col_item']
+                ]]
+                if self.eval_engine == 'rapids':
+                    import cudf as cu
+                    true_df = cu.from_pandas(true_df)
+                    prediction_df = cu.from_pandas(prediction_df)
                 prediction_df["prediction"] = [p["predictions"][0] for p in predictions]
+
                 for fn in self.eval_fns:
-                    result = fn(self.true_df, prediction_df, **self.eval_kwargs)
+                    result = fn(true_df, prediction_df, **self.eval_kwargs)
                     self._log(fn.__name__, result)
 
             tf.logging.set_verbosity(_prev_log_level)

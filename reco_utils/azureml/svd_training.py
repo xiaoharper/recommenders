@@ -81,7 +81,7 @@ def svd_training(args):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--engine', type=str, dest='engine', help="Data ETL engine. Set 'rapids' to use cudf")
+    parser.add_argument('--engine', type=str, dest='engine', help="Evaluation engine. Set 'rapids' to use cuDF")
     # Data path
     parser.add_argument('--datastore', type=str, dest='datastore', help="Datastore path")
     parser.add_argument('--train-datapath', type=str, dest='train_datapath')

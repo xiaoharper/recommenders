@@ -50,6 +50,7 @@ def _log(metric, value):
 # Parse arguments passed by Hyperdrive
 parser = argparse.ArgumentParser()
 
+parser.add_argument('--engine', type=str, dest='ENGINE', help="Evaluation engine. Set 'rapids' to use cuDF")
 parser.add_argument('--top-k', type=int, dest='TOP_K', help="Top k recommendation", default=10)
 # Data path
 parser.add_argument('--datastore', type=str, dest='DATA_DIR', help="Datastore path")
@@ -94,6 +95,9 @@ parser.add_argument('--evaluate-while-training', dest='EVALUATE_WHILE_TRAINING',
 args = parser.parse_args()
 
 params = vars(args)
+
+if params['ENGINE'] == 'rapids':
+    print("Use RAPIDS cuDF")
 
 if params['TOP_K'] <= 0:
     raise ValueError("Top K should be larger than 0")
