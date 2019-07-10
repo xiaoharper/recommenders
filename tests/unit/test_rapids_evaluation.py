@@ -97,7 +97,7 @@ def rating_pred():
     )
 
 
-def test_merge_rating(rating_true, rating_pred):
+def test_rapids_merge_rating(rating_true, rating_pred):
     y_true, y_pred = merge_rating_true_pred(
         rating_true,
         rating_pred,
@@ -137,3 +137,24 @@ def test_rapids_mae(rating_true, rating_pred):
         == 0
     )
     assert mae(rating_true, rating_pred) == pytest.approx(6.375, TOL)
+
+    
+def test_rapids_merge_ranking(rating_true, rating_pred):
+    data_hit, data_hit_count, n_users = merge_ranking_true_pred(
+        rating_true,
+        rating_pred,
+        col_user=DEFAULT_USER_COL,
+        col_item=DEFAULT_ITEM_COL,
+        col_rating=DEFAULT_RATING_COL,
+        col_prediction=DEFAULT_PREDICTION_COL,
+        relevancy_method="top_k",
+    )
+
+    assert isinstance(data_hit, cu.DataFrame)
+
+    assert isinstance(data_hit_count, cu.DataFrame)
+    columns = data_hit_count.columns
+    columns_exp = [DEFAULT_USER_COL, DEFAULT_ITEM_COL, DEFAULT_PREDICTION_COL]
+    assert set(columns).intersection(set(columns_exp)) is not None
+
+    assert n_users == 3

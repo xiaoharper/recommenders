@@ -11,13 +11,11 @@ import surprise
 
 try:
     from azureml.core import Run
-
     HAS_AML = True
     run = Run.get_context()
 except ModuleNotFoundError:
     HAS_AML = False
 
-from reco_utils.evaluation.python_evaluation import *
 from reco_utils.recommender.surprise.surprise_utils import compute_rating_predictions, compute_ranking_predictions
 
 
@@ -40,10 +38,18 @@ def svd_training(args):
     svd.fit(train_set)
 
     print("Evaluating...")
+    if args.engine == 'rapids':
+        import cudf as cu
+        from reco_utils.evaluation.rapids_evaluation import *
+    else:
+        from reco_utils.evaluation.python_evaluation import *
 
     rating_metrics = args.rating_metrics
     if len(rating_metrics) > 0:
         predictions = compute_rating_predictions(svd, validation_data, usercol=args.usercol, itemcol=args.itemcol)
+        if args.engine == 'rapids':
+            predictions = cu.from_pandas(predictions)
+
         for metric in rating_metrics:
             result = eval(metric)(validation_data, predictions)
             print(metric, result)
@@ -53,7 +59,10 @@ def svd_training(args):
     ranking_metrics = args.ranking_metrics
     if len(ranking_metrics) > 0:
         all_predictions = compute_ranking_predictions(svd, train_data, usercol=args.usercol, itemcol=args.itemcol,
-                                                  remove_seen=args.remove_seen)
+                                                      remove_seen=args.remove_seen)
+        if args.engine == 'rapids':
+            all_predictions = cu.from_pandas(all_predictions)
+
         k = args.k
         for metric in ranking_metrics:
             result = eval(metric)(validation_data, all_predictions, col_prediction='prediction', k=k)
@@ -69,6 +78,7 @@ def svd_training(args):
 
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument('--engine', type=str, dest='engine', help="Data ETL engine. Set 'rapids' to use cudf")
     # Data path
     parser.add_argument('--datastore', type=str, dest='datastore', help="Datastore path")
     parser.add_argument('--train-datapath', type=str, dest='train_datapath')
