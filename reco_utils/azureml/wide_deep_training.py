@@ -51,6 +51,7 @@ def _log(metric, value):
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--engine', type=str, dest='ENGINE', help="Evaluation engine. Set 'rapids' to use cuDF")
+parser.add_argument('--seed', type=int, dest='RANDOM_SEED', help="Random seed")
 parser.add_argument('--top-k', type=int, dest='TOP_K', help="Top k recommendation", default=10)
 # Data path
 parser.add_argument('--datastore', type=str, dest='DATA_DIR', help="Datastore path")
@@ -105,9 +106,12 @@ if params['TOP_K'] <= 0:
 if params['MODEL_TYPE'] not in {'wide', 'deep', 'wide_deep'}:
     raise ValueError("Model type should be either 'wide', 'deep', or 'wide_deep'")
 
-if params['DATA_DIR'] is None:
+if not params['DATA_DIR']:
     raise ValueError("Datastore path should be given")
 
+if not params['RANDOM_SEED']:
+    params['RANDOM_SEED'] = None
+    
 print("Args:")
 for k, v in params.items():
     _log(k, v)
