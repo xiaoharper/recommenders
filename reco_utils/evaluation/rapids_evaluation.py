@@ -355,15 +355,15 @@ def ndcg_at_k(
 
 
 def map_at_k(
-    rating_true,
-    rating_pred,
-    col_user=DEFAULT_USER_COL,
-    col_item=DEFAULT_ITEM_COL,
-    col_rating=DEFAULT_RATING_COL,
-    col_prediction=DEFAULT_PREDICTION_COL,
-    relevancy_method="top_k",
-    k=DEFAULT_K,
-    threshold=DEFAULT_THRESHOLD,
+        rating_true,
+        rating_pred,
+        col_user=DEFAULT_USER_COL,
+        col_item=DEFAULT_ITEM_COL,
+        col_rating=DEFAULT_RATING_COL,
+        col_prediction=DEFAULT_PREDICTION_COL,
+        relevancy_method="top_k",
+        k=DEFAULT_K,
+        threshold=DEFAULT_THRESHOLD,
 ):
     """Mean Average Precision at k
 
@@ -398,8 +398,11 @@ def map_at_k(
 
     # calculate reciprocal rank of items for each user and sum them up
     df_hit_sorted = df_hit.sort_values([col_user, "rank"])
-    df_hit_sorted["rr"] = (df_hit.groupby(col_user).cumcount() + 1) / df_hit["rank"]
+    cumcount = df_hit_sorted.groupby(col_user).count()[col_item].to_array()
+    df_hit_sorted["rr"] = np.concatenate([np.arange(1, cnt + 1) for cnt in cumcount])
+    df_hit_sorted["rr"] /= df_hit_sorted["rank"]
+
     df_hit_sorted = df_hit_sorted.groupby(col_user).agg({"rr": "sum"}).reset_index()
 
-    df_merge = pd.merge(df_hit_sorted, df_hit_count, on=col_user)
+    df_merge = df_hit_sorted.merge(df_hit_count, on=col_user)
     return (df_merge["rr"] / df_merge["actual"]).sum() / n_users
