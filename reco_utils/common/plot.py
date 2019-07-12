@@ -8,8 +8,8 @@ def bar_chart(
     errors=None,
     x_name=None,
     y_name=None,
-    bar_width=0.35,
     tick_labels=None,
+    figsize=(6,4),
 ):
     if errors:
         assert len(values) == len(errors)
@@ -19,15 +19,16 @@ def bar_chart(
         labels = [labels]
     else:
         assert len(values) == len(labels)
-        
-    ind = np.arange(len(values[0]))  # the x locations for the bar groups
-    pos = (1-len(values[0])) * (bar_width/2)  # x location starting position
     
-    fig, ax = plt.subplots()
+    bar_width = 1 / (len(values)+1)
+    
+    ind = np.arange(len(values[0]))  # the x locations for the bar groups
+    pos = (1-len(values)) * (bar_width/2)  # x location starting position
+    fig, ax = plt.subplots(figsize=figsize)
     
     for i, v in enumerate(values):
-        ax.bar(ind + pos, v, bar_width, yerr=errors[i] if errors else None,
-               label=labels[i])
+        ax.bar(ind + pos, v, bar_width, label=labels[i],
+               yerr=errors[i] if errors else None)
         pos += bar_width
 
     if x_name: ax.set_xlabel(x_name)
