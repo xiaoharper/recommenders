@@ -1,0 +1,13 @@
+{"Registrations":[ 
+    {
+      "Component": {
+         "Type": "Pip",
+         "Pip": {
+           "Name": "pandas",
+           "Version": "0.23.4"
+         }
+       }
+    }
+ ],
+ "Version": 1
+}
