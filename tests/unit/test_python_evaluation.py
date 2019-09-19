@@ -4,7 +4,7 @@
 import numpy as np
 import pandas as pd
 import pytest
-from mock import Mock
+from unittest.mock import Mock
 from sklearn.preprocessing import minmax_scale
 from reco_utils.common.constants import (
     DEFAULT_USER_COL,
@@ -35,7 +35,7 @@ TOL = 0.0001
 def rating_true():
     return pd.DataFrame(
         {
-            DEFAULT_USER_COL: [1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 1,],
+            DEFAULT_USER_COL: [1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 1],
             DEFAULT_ITEM_COL: [
                 3,
                 1,
@@ -56,7 +56,7 @@ def rating_true():
                 1,
                 2,
             ],
-            DEFAULT_RATING_COL: [3, 5, 5, 3, 3, 1, 5, 5, 5, 4, 4, 3, 3, 3, 2, 1, 5, 4,],
+            DEFAULT_RATING_COL: [3, 5, 5, 3, 3, 1, 5, 5, 5, 4, 4, 3, 3, 3, 2, 1, 5, 4],
         }
     )
 
@@ -65,7 +65,7 @@ def rating_true():
 def rating_pred():
     return pd.DataFrame(
         {
-            DEFAULT_USER_COL: [1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 1,],
+            DEFAULT_USER_COL: [1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 1],
             DEFAULT_ITEM_COL: [
                 12,
                 10,
@@ -106,7 +106,7 @@ def rating_pred():
                 14,
                 13,
             ],
-            DEFAULT_RATING_COL: [3, 5, 5, 3, 3, 1, 5, 5, 5, 4, 4, 3, 3, 3, 2, 1, 5, 4,],
+            DEFAULT_RATING_COL: [3, 5, 5, 3, 3, 1, 5, 5, 5, 4, 4, 3, 3, 3, 2, 1, 5, 4],
         }
     )
 
@@ -115,7 +115,7 @@ def rating_pred():
 def rating_nohit():
     return pd.DataFrame(
         {
-            DEFAULT_USER_COL: [1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 1,],
+            DEFAULT_USER_COL: [1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 1],
             DEFAULT_ITEM_COL: [100] * 18,
             DEFAULT_PREDICTION_COL: [
                 12,
@@ -393,14 +393,22 @@ def test_python_errors(rating_true, rating_pred):
         rmse(rating_true, rating_true, col_user="not_user")
 
     with pytest.raises(ValueError):
-        mae(rating_pred, rating_pred, col_rating=DEFAULT_PREDICTION_COL, col_user="not_user")
+        mae(
+            rating_pred,
+            rating_pred,
+            col_rating=DEFAULT_PREDICTION_COL,
+            col_user="not_user",
+        )
 
     with pytest.raises(ValueError):
         rsquared(rating_true, rating_pred, col_item="not_item")
 
     with pytest.raises(ValueError):
         exp_var(
-            rating_pred, rating_pred, col_rating=DEFAULT_PREDICTION_COL, col_item="not_item"
+            rating_pred,
+            rating_pred,
+            col_rating=DEFAULT_PREDICTION_COL,
+            col_item="not_item",
         )
 
     with pytest.raises(ValueError):
@@ -414,5 +422,9 @@ def test_python_errors(rating_true, rating_pred):
 
     with pytest.raises(ValueError):
         map_at_k(
-            rating_pred, rating_pred, col_rating=DEFAULT_PREDICTION_COL, col_user="not_user"
+            rating_pred,
+            rating_pred,
+            col_rating=DEFAULT_PREDICTION_COL,
+            col_user="not_user",
         )
+

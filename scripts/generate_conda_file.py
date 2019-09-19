@@ -42,7 +42,6 @@ CONDA_BASE = {
     "ipykernel": "ipykernel>=4.6.1",
     "jupyter": "jupyter>=1.0.0",
     "matplotlib": "matplotlib>=2.2.2",
-    "mock": "mock==2.0.0",
     "numpy": "numpy>=1.13.3",
     "pandas": "pandas>=0.23.4",
     "pip": "pip>=19.0.3",
@@ -89,12 +88,8 @@ PIP_BASE = {
 PIP_GPU = {}
 PIP_PYSPARK = {}
 
-PIP_DARWIN = {
-    "nni": "nni==0.5.2.1.1",
-}
-PIP_LINUX = {
-    "nni": "nni==0.5.2.1.1",
-}
+PIP_DARWIN = {"nni": "nni==0.5.2.1.1"}
+PIP_LINUX = {"nni": "nni==0.5.2.1.1"}
 PIP_WIN32 = {}
 
 
@@ -158,14 +153,14 @@ if __name__ == "__main__":
         pip_packages.update(PIP_GPU)
 
     # check for os platform support
-    if platform == 'darwin':
+    if platform == "darwin":
         pip_packages.update(PIP_DARWIN)
-    elif platform.startswith('linux'):
+    elif platform.startswith("linux"):
         pip_packages.update(PIP_LINUX)
-    elif platform == 'win32':
+    elif platform == "win32":
         pip_packages.update(PIP_WIN32)
     else:
-        raise Exception('Unsupported platform, must be Windows, Linux, or macOS')
+        raise Exception("Unsupported platform, must be Windows, Linux, or macOS")
 
     # write out yaml file
     conda_file = "{}.yaml".format(conda_env)
