@@ -3,6 +3,8 @@
 
 import pandas as pd
 import requests
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
 import logging
 
 logger = logging.getLogger(__name__)
@@ -12,7 +14,12 @@ API_URL_WIKIDATA = "https://query.wikidata.org/sparql"
 SESSION = None
 
 
-def get_session(session=None):
+def get_session(
+    session=None,
+    retries=10,
+    backoff_factor=1,
+    status_forcelist=(401, 408, 429, 431, 500, 502, 503, 504, 511),
+):
     """Get session object
 
     Args:
@@ -28,6 +35,18 @@ def get_session(session=None):
             SESSION = requests.Session()
         session = SESSION
 
+    retry = Retry(
+        total=retries,
+        read=retries,
+        connect=retries,
+        backoff_factor=backoff_factor,
+        status_forcelist=status_forcelist,
+        raise_on_redirect=True,
+    )
+
+    adapter = HTTPAdapter(max_retries=retry)
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
     return session
 
 

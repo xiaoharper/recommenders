@@ -2,14 +2,28 @@
 # Licensed under the MIT License.
 
 import pytest
+from unittest.mock import patch
+from requests import Session
 from reco_utils.dataset.wikidata import (
     search_wikidata,
     find_wikidata_id,
     query_entity_links,
     read_linked_entities,
     query_entity_description,
+    requests,
 )
 
+class MockResponse:
+    # Class that mocks requests.models.Response
+    def __init__(self, content, error):
+        self._content = content
+        self._error = error
+
+    def json(self, params):
+        if "list" in params:
+            return {"query": {"search": [ {"pageid":}]}}
+        elif "pageids" in params:
+            return {}
 
 @pytest.fixture(scope="module")
 def q():
@@ -21,8 +35,9 @@ def q():
 
 
 def test_find_wikidata_id(q):
-    assert find_wikidata_id(q["correct"]) == "Q15228"
-    assert find_wikidata_id(q["not_correct"]) == "entityNotFound"
+    #assert find_wikidata_id(q["correct"]) == "Q15228"
+    #assert find_wikidata_id(q["not_correct"]) == "entityNotFound"
+    with patch("requests.get", side_effect)
 
 
 def test_query_entity_links(q):
