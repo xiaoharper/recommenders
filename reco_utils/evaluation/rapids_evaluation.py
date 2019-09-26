@@ -9,10 +9,10 @@ from reco_utils.common.constants import (
     DEFAULT_K,
     DEFAULT_THRESHOLD,
 )
+from reco_utils.evaluation.python_evaluation import check_column_dtypes 
 
 
-# Memory cleanup just in case
-
+@check_column_dtypes
 def merge_rating_true_pred(
     rating_true,
     rating_pred,
@@ -88,6 +88,85 @@ def mae(
     return (y_true - y_pred).abs().mean()
 
 
+def rsquared(
+    rating_true,
+    rating_pred,
+    col_user=DEFAULT_USER_COL,
+    col_item=DEFAULT_ITEM_COL,
+    col_rating=DEFAULT_RATING_COL,
+    col_prediction=DEFAULT_PREDICTION_COL,
+):
+    """Calculate R squared. The same implementation of sklearn's
+
+    Args:
+        rating_true (pd.DataFrame): True data. There should be no duplicate (userID, itemID) pairs
+        rating_pred (pd.DataFrame): Predicted data. There should be no duplicate (userID, itemID) pairs
+        col_user (str): column name for user
+        col_item (str): column name for item
+        col_rating (str): column name for rating
+        col_prediction (str): column name for prediction
+    
+    Returns:
+        float: R squared (min=0, max=1).
+    """    
+    y_true, y_pred = merge_rating_true_pred(
+        rating_true=rating_true,
+        rating_pred=rating_pred,
+        col_user=col_user,
+        col_item=col_item,
+        col_rating=col_rating,
+        col_prediction=col_prediction,
+    )
+    if len(y_pred) < 2:
+        msg = "R^2 score is not well-defined with less than two samples."
+        import warnings
+        warnings.warn(msg)
+        return float('nan')
+    
+    numerator = ((y_true - y_pred) ** 2).sum()
+    denominator = ((y_true - y_true.mean()) ** 2).sum()
+
+    return 1 - numerator/denominator
+
+
+def exp_var(
+    rating_true,
+    rating_pred,
+    col_user=DEFAULT_USER_COL,
+    col_item=DEFAULT_ITEM_COL,
+    col_rating=DEFAULT_RATING_COL,
+    col_prediction=DEFAULT_PREDICTION_COL,
+):
+    """Calculate explained variance. The same implementation of sklearn's
+
+    Args:
+        rating_true (pd.DataFrame): True data. There should be no duplicate (userID, itemID) pairs
+        rating_pred (pd.DataFrame): Predicted data. There should be no duplicate (userID, itemID) pairs
+        col_user (str): column name for user
+        col_item (str): column name for item
+        col_rating (str): column name for rating
+        col_prediction (str): column name for prediction
+
+    Returns:
+        float: Explained variance (min=0, max=1).
+    """
+    y_true, y_pred = merge_rating_true_pred(
+        rating_true=rating_true,
+        rating_pred=rating_pred,
+        col_user=col_user,
+        col_item=col_item,
+        col_rating=col_rating,
+        col_prediction=col_prediction,
+    )
+    
+    y_diff_avg = (y_true - y_pred).mean()
+    numerator = ((y_true - y_pred - y_diff_avg) ** 2).mean()
+    y_true_avg = y_true.mean()
+    denominator = ((y_true - y_true_avg) ** 2).mean()
+
+    return 0. if denominator == 0. else 1 - numerator/denominator
+    
+
 def get_top_k_items(
     dataframe, col_user=DEFAULT_USER_COL, col_rating=DEFAULT_RATING_COL, k=DEFAULT_K
 ):
@@ -106,22 +185,26 @@ def get_top_k_items(
         k (int): number of items for each user
 
     Returns:
-        cu.DataFrame: DataFrame of top k items for each user
+        cu.DataFrame: DataFrame of top k items for each user sorted by `col_user` and `rank`
     """
     # Sort by [user, rating] to replicate groupby user then sort
-    group_by_sorted = dataframe.sort_values([col_user, col_rating], ascending=False)
+    group_by_sorted = dataframe.sort_values([col_user, col_rating], ascending=[True, False])
     # Replicate pandas rank() computation
     rating_counts = dataframe.groupby(col_user).count()[col_rating].sort_index(ascending=False)
-    group_by_sorted['rank'] = np.concatenate([np.arange(1, cnt + 1) for cnt in rating_counts.to_array()])
+    group_by_sorted['rank'] = np.concatenate(
+        [np.arange(1, cnt + 1) for cnt in rating_counts.to_array()]
+    )
 
     return group_by_sorted.query('rank <= @k').reset_index(drop=True)
 
 
+@check_column_dtypes
 def merge_ranking_true_pred(
     rating_true,
     rating_pred,
     col_user=DEFAULT_USER_COL,
     col_item=DEFAULT_ITEM_COL,
+    col_rating=DEFAULT_RATING_COL,
     col_prediction=DEFAULT_PREDICTION_COL,
     relevancy_method='top_k',
     k=DEFAULT_K,
@@ -134,6 +217,8 @@ def merge_ranking_true_pred(
         rating_pred (cu.DataFrame): Predicted DataFrame
         col_user (str): column name for user
         col_item (str): column name for item
+        col_rating (str): column name for rating. Note, for now this argument is not used
+            but keep it for type checking            
         col_prediction (str): column name for prediction
         relevancy_method (str): method for determining relevancy ['top_k', 'by_threshold']
         k (int): number of top k items per user (optional)
@@ -141,7 +226,7 @@ def merge_ranking_true_pred(
 
     Returns:
         cu.DataFrame, cu.DataFrame, int:
-            DataFrame of recommendation hits
+            DataFrame of recommendation hits, sorted by `col_user` and `rank`
             DataFrmae of hit counts vs actual relevant items per user
             number of unique user ids
     """
@@ -151,16 +236,19 @@ def merge_ranking_true_pred(
     # Make sure the prediction and true data frames have the same set of users
     common_users = true_users.merge(pred_users, on=col_user)
     rating_true_common = rating_true.merge(common_users, on=col_user)
-    # RAPIDS computes merge operation in parallel, so the order of result rows are nondeterministic.
-    # To make it deterministic, we keep the original index and sort by the index after the merge.
-    # We only do care about the order of prediction data because we select top-k predictions later.
-    rating_pred_common = rating_pred.reset_index().merge(common_users, on=col_user).set_index('index').sort_index()
+    # cuDF computes merge operation in parallel and thus the order of result rows
+    # are nondeterministic. To make it deterministic, we keep the original index
+    # and sort by the index after the merge.
+    # Note, we only do care about the order of prediction data because we select
+    # top-k predictions later where the order matters when tie happens.
+    rating_pred_common = (
+        rating_pred.reset_index()
+        .merge(common_users, on=col_user)
+        .set_index('index')
+        .sort_index()
+    )
     n_users = len(common_users)
 
-    # Return hit items in prediction data frame with ranking information. This is used for calculating NDCG and MAP.
-    # Use first to generate unique ranking values for each item. This is to align with the implementation in
-    # Spark evaluation metrics, where index of each recommended items (the indices are unique to items) is used
-    # to calculate penalized precision of the ordered items.
     if relevancy_method == "top_k":
         top_k = k
     elif relevancy_method == "by_threshold":
@@ -173,14 +261,28 @@ def merge_ranking_true_pred(
         col_rating=col_prediction,
         k=top_k,
     )
-    df_hit = df_top_k.merge(rating_true_common, on=[col_user, col_item])[
-        [col_user, col_item, "rank"]
-    ]
+    # cuDF (v0.8) doesn't preserve the order of the left keys after merge. Maybe a bug?
+    # Therefore, we need to sort again.
+    df_hit = (
+        df_top_k.merge(rating_true_common, on=[col_user, col_item])
+        .sort_values(['userID', 'rank'])[[col_user, col_item, "rank"]]
+    )
 
     # count the number of hits vs actual relevant items per user
-    hit_count = df_hit.groupby(col_user, as_index=False).agg({col_user: "count"}).rename({col_user: "hit"})
-    actual_count = rating_true_common.groupby(col_user, as_index=False).agg({col_user: "count"}).rename({col_user: "actual"})
-    df_hit_count = hit_count.merge(actual_count, left_index=True, right_index=True).reset_index()
+    hit_count = (
+        df_hit.groupby(col_user, as_index=False)
+        .agg({col_user: "count"})
+        .rename({col_user: "hit"})
+    )
+    actual_count = (
+        rating_true_common.groupby(col_user, as_index=False)
+        .agg({col_user: "count"})
+        .rename({col_user: "actual"})
+    )
+    df_hit_count = (
+        hit_count.merge(actual_count, left_index=True, right_index=True)
+        .reset_index()
+    )
     return df_hit, df_hit_count, n_users
 
 
@@ -355,15 +457,15 @@ def ndcg_at_k(
 
 
 def map_at_k(
-    rating_true,
-    rating_pred,
-    col_user=DEFAULT_USER_COL,
-    col_item=DEFAULT_ITEM_COL,
-    col_rating=DEFAULT_RATING_COL,
-    col_prediction=DEFAULT_PREDICTION_COL,
-    relevancy_method="top_k",
-    k=DEFAULT_K,
-    threshold=DEFAULT_THRESHOLD,
+        rating_true,
+        rating_pred,
+        col_user=DEFAULT_USER_COL,
+        col_item=DEFAULT_ITEM_COL,
+        col_rating=DEFAULT_RATING_COL,
+        col_prediction=DEFAULT_PREDICTION_COL,
+        relevancy_method="top_k",
+        k=DEFAULT_K,
+        threshold=DEFAULT_THRESHOLD,
 ):
     """Mean Average Precision at k
 
@@ -397,11 +499,14 @@ def map_at_k(
         return 0.0
 
     # calculate reciprocal rank of items for each user and sum them up
-    df_hit_sorted = df_hit.sort_values([col_user, "rank"])
-    df_hit_sorted["rr"] = (df_hit.groupby(col_user).cumcount() + 1) / df_hit["rank"]
+    df_hit_sorted = df_hit.copy()
+    cumcount = df_hit_sorted.groupby(col_user).count()[col_item].to_array()
+    df_hit_sorted["rr"] = np.concatenate([np.arange(1, cnt + 1) for cnt in cumcount])
+    df_hit_sorted["rr"] /= df_hit_sorted["rank"]
+
     df_hit_sorted = df_hit_sorted.groupby(col_user).agg({"rr": "sum"}).reset_index()
 
-    df_merge = pd.merge(df_hit_sorted, df_hit_count, on=col_user)
+    df_merge = df_hit_sorted.merge(df_hit_count, on=col_user)
     return (df_merge["rr"] / df_merge["actual"]).sum() / n_users
 
 
