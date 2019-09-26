@@ -11,6 +11,7 @@ They have admin access to the repo and provide support reviewing issues and pull
    * SAR single node improvements
    * Reco utils metrics computations
    * Tests for Surprise
+   * Model selection notebooks (AzureML for SVD, NNI) 
 * **[Jeremy Reynolds](https://github.com/jreynolds01)**
    * Reference architecture
 * **[Jun Ki Min](https://github.com/loomlike)**
@@ -49,7 +50,8 @@ To contributors: please add your name to the list when you submit a patch to the
 * **[Bamdev Mishra](https://github.com/bamdevm)**
    * RLRMC algorithm
 * **[Beth Zeranski](https://github.com/bethz)**
-   * AzureML tests
+   * DevOps Pipelines used as a control plane to run existing Pytests on AzureML
+   * Automation scripts to configure AzureML environment for pipeline use 
 * **[Dan Ciborowski](https://github.com/dciborow)**
    * ALS operationalization notebook
    * SAR PySpark improvement
