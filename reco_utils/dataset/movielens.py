@@ -232,9 +232,9 @@ def load_item_df(
     size="100k",
     local_cache_path=None,
     movie_col=DEFAULT_ITEM_COL,
-    title_col=None,
-    genres_col=None,
-    year_col=None,
+    title_col="title",
+    genres_col="genres",
+    year_col="year",
 ):
     """Loads Movie info.
 
