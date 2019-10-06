@@ -9,14 +9,16 @@ import tensorflow as tf
 MODEL_DIR = "model_checkpoints"
 
 
+# TODO check params update
 OPTIMIZERS = dict(
-    adadelta=tf.train.AdadeltaOptimizer,
-    adagrad=tf.train.AdagradOptimizer,
-    adam=tf.train.AdamOptimizer,
-    ftrl=tf.train.FtrlOptimizer,
-    momentum=tf.train.MomentumOptimizer,
-    rmsprop=tf.train.RMSPropOptimizer,
-    sgd=tf.train.GradientDescentOptimizer,
+    adadelta=tf.keras.optimizers.Adadelta,
+    adagrad=tf.keras.optimizers.Adagrad,
+    adam=tf.keras.optimizers.Adam,
+    # TODO: adamax
+    ftrl=tf.keras.optimizers.Ftrl,
+    # TODO: nadam
+    rmsprop=tf.keras.optimizers.RMSprop,
+    sgd=tf.keras.optimizers.SGD,
 )
 
 
@@ -54,15 +56,10 @@ def pandas_input_fn_for_saved_model(df, feat_name_type):
 
 
 def pandas_input_fn(
-    df, y_col=None, batch_size=128, num_epochs=1, shuffle=False, seed=None
+    df, y_col=None, batch_size=128, num_epochs=1, shuffle=False, seed=None, shuffle_buffer_size=1000
 ):
     """Pandas input function for TensorFlow high-level API Estimator.
     This function returns a `tf.data.Dataset` function.
-
-    .. note::
-    
-        `tf.estimator.inputs.pandas_input_fn` cannot handle array/list column properly.
-        For more information, see https://www.tensorflow.org/api_docs/python/tf/estimator/inputs/numpy_input_fn
 
     Args:
         df (pd.DataFrame): Data containing features.
@@ -79,6 +76,8 @@ def pandas_input_fn(
     X_df = df.copy()
     if y_col is not None:
         y = X_df.pop(y_col).values
+        if isinstance(y[0], np.float64):
+            y = y.astype(np.float32)
     else:
         y = None
 
@@ -87,6 +86,8 @@ def pandas_input_fn(
         values = X_df[col].values
         if isinstance(values[0], (list, np.ndarray)):
             values = np.array([l for l in values], dtype=np.float32)
+        elif isinstance(values[0], np.float64):
+            values = values.astype(np.float32)
         X[col] = values
 
     return lambda: _dataset(
@@ -96,10 +97,11 @@ def pandas_input_fn(
         num_epochs=num_epochs,
         shuffle=shuffle,
         seed=seed,
+        shuffle_buffer_size=shuffle_buffer_size,
     )
 
 
-def _dataset(x, y=None, batch_size=128, num_epochs=1, shuffle=False, seed=None):
+def _dataset(x, y=None, batch_size=128, num_epochs=1, shuffle=False, seed=None, shuffle_buffer_size=1000):
     if y is None:
         dataset = tf.data.Dataset.from_tensor_slices(x)
     else:
@@ -107,7 +109,7 @@ def _dataset(x, y=None, batch_size=128, num_epochs=1, shuffle=False, seed=None):
 
     if shuffle:
         dataset = dataset.shuffle(
-            1000, seed=seed, reshuffle_each_iteration=True  # buffer size = 1000
+            buffer_size=shuffle_buffer_size, seed=seed, reshuffle_each_iteration=True
         )
     elif seed is not None:
         import warnings
@@ -126,7 +128,7 @@ def build_optimizer(name, lr=0.001, **kwargs):
         kwargs: Optimizer arguments as key-value pairs
 
     Returns:
-        tf.train.Optimizer
+        tf.keras.optimizers.Optimizer
     """
     name = name.lower()
 
@@ -150,36 +152,23 @@ def build_optimizer(name, lr=0.001, **kwargs):
     return optimizer_class(learning_rate=lr, **params)
 
 
-def export_model(model, train_input_fn, eval_input_fn, tf_feat_cols, base_dir):
-    """Export TensorFlow estimator (model).
+def export_model(model, tf_feat_cols, base_dir):
+    """Export TensorFlow estimator model for serving.
     
     Args:
         model (tf.estimator.Estimator): Model to export.
-        train_input_fn (function): Training input function to create data receiver spec.
-        eval_input_fn (function): Evaluation input function to create data receiver spec. 
         tf_feat_cols (list(tf.feature_column)): Feature columns.
         base_dir (str): Base directory to export the model.
     
     Returns:
         str: Exported model path
     """
-    tf.logging.set_verbosity(tf.logging.ERROR)
-    train_rcvr_fn = tf.contrib.estimator.build_supervised_input_receiver_fn_from_input_fn(
-        train_input_fn
-    )
-    eval_rcvr_fn = tf.contrib.estimator.build_supervised_input_receiver_fn_from_input_fn(
-        eval_input_fn
-    )
-    serve_rcvr_fn = tf.estimator.export.build_parsing_serving_input_receiver_fn(
+    serving_input_fn = tf.estimator.export.build_parsing_serving_input_receiver_fn(
         tf.feature_column.make_parse_example_spec(tf_feat_cols)
     )
-    rcvr_fn_map = {
-        tf.estimator.ModeKeys.TRAIN: train_rcvr_fn,
-        tf.estimator.ModeKeys.EVAL: eval_rcvr_fn,
-        tf.estimator.ModeKeys.PREDICT: serve_rcvr_fn,
-    }
-    exported_path = tf.contrib.estimator.export_all_saved_models(
-        model, export_dir_base=base_dir, input_receiver_fn_map=rcvr_fn_map
+
+    exported_path = model.export_saved_model(
+        base_dir, serving_input_fn
     )
 
     return exported_path.decode("utf-8")
@@ -201,7 +190,7 @@ def evaluation_log_hook(
     
     .. note::
 
-        Note, TensorFlow Estimator model uses the last checkpoint weights for evaluation or prediction.
+        TensorFlow Estimator model uses the last checkpoint weights for evaluation or prediction.
         In order to get the most up-to-date evaluation results while training,
         set model's `save_checkpoints_steps` to be equal or greater than hook's `every_n_iter`.
 
@@ -239,7 +228,7 @@ def evaluation_log_hook(
     )
 
 
-class _TrainLogHook(tf.train.SessionRunHook):
+class _TrainLogHook(tf.estimator.SessionRunHook):
     def __init__(
         self,
         estimator,
@@ -290,9 +279,6 @@ class _TrainLogHook(tf.train.SessionRunHook):
             self.step += 1
 
         if self.step % self.every_n_iter == 0:
-            _prev_log_level = tf.logging.get_verbosity()
-            tf.logging.set_verbosity(tf.logging.ERROR)
-
             if self.eval_fns is None:
                 result = self.model.evaluate(
                     input_fn=pandas_input_fn(
@@ -316,8 +302,6 @@ class _TrainLogHook(tf.train.SessionRunHook):
                 for fn in self.eval_fns:
                     result = fn(self.true_df, prediction_df, **self.eval_kwargs)
                     self._log(fn.__name__, result)
-
-            tf.logging.set_verbosity(_prev_log_level)
 
     def end(self, session):
         if self.summary_writer is not None:
