@@ -53,7 +53,6 @@ CONDA_BASE = {
     "scipy": "scipy>=1.0.0",
     "scikit-surprise": "scikit-surprise>=1.0.6",
     "swig": "swig==3.0.12",
-    "tensorflow": "tensorflow==1.12.0",
     "lightgbm": "lightgbm==2.2.1",
     "cornac": "cornac>=1.1.2",
 }
@@ -63,7 +62,6 @@ CONDA_PYSPARK = {"pyarrow": "pyarrow>=0.8.0", "pyspark": "pyspark==2.3.1"}
 CONDA_GPU = {
     "numba": "numba>=0.38.1",
     "pytorch": "pytorch>=1.0.0",
-    "tensorflow": "tensorflow-gpu==1.12.0",
 }
 
 PIP_BASE = {
@@ -83,10 +81,13 @@ PIP_BASE = {
     "nbconvert": "nbconvert==5.5.0",
     "pydocumentdb": "pydocumentdb>=2.3.3",
     "pymanopt": "pymanopt==0.2.3",
+    "tensorflow": "tensorflow==2.0.0",
     "tqdm": "tqdm==4.31.1",
 }
 
-PIP_GPU = {}
+PIP_GPU = {
+    "tensorflow": "tensorflow-gpu==2.0.0",
+}
 PIP_PYSPARK = {}
 
 PIP_DARWIN = {
